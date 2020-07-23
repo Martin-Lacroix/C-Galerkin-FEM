@@ -4,7 +4,7 @@ Finite element code developped for **academic purpose** to solve a transport equ
 
 ## Use
 
-For the Python code, move to the file containing the source codes and directly launch example.py in any Python 3 compiler.
+For the Python code, move to the file containing the source codes and directly launch example.py in any Python 3 compiler, the result is placed in an output folder.
 ```css
 python example.py
 ```
