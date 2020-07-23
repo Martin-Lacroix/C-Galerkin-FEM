@@ -1,4 +1,3 @@
-from matplotlib import pyplot as plt
 from solver import solver
 from scipy import stats
 from mesh import Mesh
