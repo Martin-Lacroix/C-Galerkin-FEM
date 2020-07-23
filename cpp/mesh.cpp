@@ -108,8 +108,8 @@ Quadrangle::Quadrangle(vector<vector<double>> nXY){
 
         for(int j=0; j<4; j++){
 
-        dxN(j,i) += drN(j,i)*invJ11(i)+dsN(j,i)*invJ12(i);
-        dyN(j,i) += drN(j,i)*invJ12(i)+dsN(j,i)*invJ22(i);
+            dxN(j,i) += drN(j,i)*invJ11(i)+dsN(j,i)*invJ12(i);
+            dyN(j,i) += drN(j,i)*invJ12(i)+dsN(j,i)*invJ22(i);
         }
     }
 
