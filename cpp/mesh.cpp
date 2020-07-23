@@ -121,12 +121,14 @@ Quadrangle::Quadrangle(vector<vector<double>> nXY){
 Face::Face(vector<vector<double>> nXY){
 
     N = MatrixXd(2,3);
+    Vector3d wei{5.0/9,5.0/9,8.0/9};
+    vector<double> gRS{-sqrt(3.0/5),sqrt(3.0/5),0};
     Vector3d v{nXY[1][0]-nXY[0][0],nXY[1][1]-nXY[0][1],0};
 
     // Outer normal
 
     norm = {v(1),v(0)};
-    detJ = sqrt(v(0)*v(0)+v(1)*v(1))/2;
+    double detJ = sqrt(v(0)*v(0)+v(1)*v(1))/2;
     norm /= sqrt(norm(0)*norm(0)+norm(1)*norm(1));
 
     // Mass and local shape functions

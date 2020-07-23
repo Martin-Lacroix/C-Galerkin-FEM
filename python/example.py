@@ -88,7 +88,6 @@ print('Solver: ',time.time()-start)
 
 path = r'../output' 
 if not os.path.exists(path): os.makedirs(path)
-
 np.save('../output/solution.npy',uStep)
 np.save('../output/time.npy',tStep)
 np.save('../output/nXY.npy',nXY)

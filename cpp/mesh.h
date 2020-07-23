@@ -42,11 +42,6 @@ class Face{
     Matrix2d M;
     MatrixXd N;
     Vector2d norm;
-    double detJ;
-
-    vector<vector<double>> nXY;
-    Vector3d wei{5.0/9,5.0/9,8.0/9};
-    vector<double> gRS{-sqrt(3.0/5),sqrt(3.0/5),0};
 };
 
 class Mesh{

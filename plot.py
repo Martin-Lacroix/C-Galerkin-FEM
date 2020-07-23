@@ -40,15 +40,15 @@ for i in range(0,nbrStep,int(nbrStep/step)):
     ax.xaxis.set_major_locator(plt.MaxNLocator(5))
     ax.yaxis.set_major_locator(plt.MaxNLocator(6))
     ax.zaxis.set_major_locator(plt.MaxNLocator(4))
+    ax.plot_surface(y,x,z,rstride=1,cstride=1,cmap='coolwarm',vmin=0,vmax=1)
+    ax.xaxis._axinfo['grid'] = {'color':[0.9,0.9,0.9],'linewidth':0.5,'linestyle':'-'}
+    ax.yaxis._axinfo['grid'] = {'color':[0.9,0.9,0.9],'linewidth':0.5,'linestyle':'-'}
+    ax.zaxis._axinfo['grid'] = {'color':[0.9,0.9,0.9],'linewidth':0.5,'linestyle':'-'}
     ax.xaxis.set_pane_color((1,1,1,0))
     ax.yaxis.set_pane_color((1,1,1,0))
     ax.zaxis.set_pane_color((1,1,1,0))
-    ax.xaxis._axinfo['grid'] = {'color': [0.9,0.9,0.9], 'linewidth': 0.5, 'linestyle': '-'}
-    ax.yaxis._axinfo['grid'] = {'color': [0.9,0.9,0.9], 'linewidth': 0.5, 'linestyle': '-'}
-    ax.zaxis._axinfo['grid'] = {'color': [0.9,0.9,0.9], 'linewidth': 0.5, 'linestyle': '-'}
-    ax.plot_surface(y,x,z,rstride=1,cstride=1,cmap='coolwarm',vmin=0,vmax=1)
     ax.set_zlim(-1,1)
     plt.tight_layout()
     
-    plt.savefig("output/"+str(k)+".png",bbox_inches="tight",format="png",transparent=False)
+    plt.savefig("output/"+str(k)+".png",bbox_inches="tight",format="png")
     k += 1
