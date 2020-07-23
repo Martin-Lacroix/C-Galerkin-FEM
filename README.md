@@ -10,7 +10,7 @@ python example.py
 ```
 The C++ code requires to be compiled, for instance using minGW with the path to Eigen included. Then you may directly launch example.exe from the output file and visualize the solution with plot.py.
 ```css
-g++ -O2 -I C:\ProgramData\Eigen run.cpp mesh.cpp -o run.exe
+g++ -O2 -I C:\ProgramData\Eigen example.cpp mesh.cpp -o example.exe
 .\example.exe
 ```
 
