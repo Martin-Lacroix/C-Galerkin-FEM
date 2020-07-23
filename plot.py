@@ -11,9 +11,9 @@ try:
     time = np.genfromtxt("output/time.txt",delimiter=',')
     nXY = np.genfromtxt("output/nXY.txt",delimiter=',')
 except:
-    uStep = np.load("output/solution.txt")
-    time = np.load("output/time.txt")
-    nXY = np.load("output/nXY.txt")
+    uStep = np.load("output/solution.npy")
+    time = np.load("output/time.npy")
+    nXY = np.load("output/nXY.npy")
 
 # %% Display Solution
 
