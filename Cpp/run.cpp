@@ -1,5 +1,6 @@
 #include <Eigen/Dense>
 #include <iostream>
+#include <direct.h>
 #include <fstream>
 #include "solver.h"
 #include <vector>
@@ -102,9 +103,10 @@ int main(){
     Struct param = meshParam(elem,size,dx);
     VectorXd u0 = gaussian(param.nXY,dx,center);
 
-    ofstream solution("output/solution.txt");
-    ofstream time("output/time.txt");
-    ofstream nXY("output/nXY.txt");
+    mkdir("../output");
+    ofstream solution("../output/solution.txt");
+    ofstream time("../output/time.txt");
+    ofstream nXY("../output/nXY.txt");
 
     // Solver
 

@@ -4,6 +4,7 @@ from scipy import stats
 from mesh import Mesh
 import numpy as np
 import time
+import os
 
 # %% Functions
 
@@ -84,46 +85,11 @@ start = time.time()
 uStep,tStep = solver(mesh,tVec,flux,u0)
 print('Solver: ',time.time()-start)
 
-# %% Display Solution
+# %% Writes Solution
 
-plt.rcParams['font.size'] = 18
-plt.rcParams['legend.fontsize'] = 18
-plt.rcParams['axes.unicode_minus'] = 0
-plt.rcParams['mathtext.fontset'] = 'cm'
-plt.rcParams['font.family'] = 'DejaVu Sans'
+path = r'../output' 
+if not os.path.exists(path): os.makedirs(path)
 
-k = 0
-step = 40
-nbrStep = len(uStep)
-for i in range(0,nbrStep,int(nbrStep/step)):
-
-    u = uStep[i]
-    x = np.arange(size)
-    y = np.arange(size)
-    x,y = np.meshgrid(x,y)
-    z = np.zeros((size,size))
-    for j in range(size**2): z[tuple(np.rint(mesh.nXY[j]/dx).astype(int))] = u[j]
-    z = z.T
-
-    # Plots figures
-
-    fig = plt.figure(i,figsize=(12,6))
-    ax = fig.gca(projection='3d')
-    ax.set_xlabel('$y$',labelpad=20)
-    ax.set_ylabel('$x$',labelpad=15)
-    ax.set_zlabel('Value',labelpad=10)
-    ax.xaxis.set_major_locator(plt.MaxNLocator(5))
-    ax.yaxis.set_major_locator(plt.MaxNLocator(6))
-    ax.zaxis.set_major_locator(plt.MaxNLocator(4))
-    ax.xaxis.set_pane_color((1,1,1,0))
-    ax.yaxis.set_pane_color((1,1,1,0))
-    ax.zaxis.set_pane_color((1,1,1,0))
-    ax.xaxis._axinfo['grid'] = {'color': [0.9,0.9,0.9], 'linewidth': 0.5, 'linestyle': '-'}
-    ax.yaxis._axinfo['grid'] = {'color': [0.9,0.9,0.9], 'linewidth': 0.5, 'linestyle': '-'}
-    ax.zaxis._axinfo['grid'] = {'color': [0.9,0.9,0.9], 'linewidth': 0.5, 'linestyle': '-'}
-    ax.plot_surface(y,x,z,rstride=1,cstride=1,cmap='coolwarm',vmin=0,vmax=1)
-    ax.set_zlim(-1,1)
-    plt.tight_layout()
-    
-    plt.savefig("output/"+str(k)+".png",bbox_inches="tight",format="png",transparent=False)
-    k += 1
+np.save('../output/solution.npy',uStep)
+np.save('../output/time.npy',tStep)
+np.save('../output/nXY.npy',nXY)

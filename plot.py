@@ -6,17 +6,16 @@ import numpy as np
 dx = 0.2
 size = 60
 
-uStep = np.genfromtxt("output/solution.txt", delimiter=',')
-time = np.genfromtxt("output/time.txt", delimiter=',')
-nXY = np.genfromtxt("output/nXY.txt", delimiter=',')
+try:
+    uStep = np.genfromtxt("output/solution.txt",delimiter=',')
+    time = np.genfromtxt("output/time.txt",delimiter=',')
+    nXY = np.genfromtxt("output/nXY.txt",delimiter=',')
+except:
+    uStep = np.load("output/solution.txt")
+    time = np.load("output/time.txt")
+    nXY = np.load("output/nXY.txt")
 
 # %% Display Solution
-
-plt.rcParams['font.size'] = 18
-plt.rcParams['legend.fontsize'] = 18
-plt.rcParams['axes.unicode_minus'] = 0
-plt.rcParams['mathtext.fontset'] = 'cm'
-plt.rcParams['font.family'] = 'DejaVu Sans'
 
 k = 0
 step = 40

@@ -4,18 +4,13 @@ Finite element code developped for **academic purpose**. Both propgrams, the fir
 
 ## Use
 
-You must first create an output subfolder folder in both folders containing the source codes in order to store the figures and solution files.
-```css
-C:...\Finite-Element\Python\output
-C:...\Finite-Element\Cpp\output
-```
 For the Python code, move to the file containing the source codes and directly launch run.py in any Python 3 compiler. The C++ code requires to be compiled with minGW and the path to Eigen, then you may directly launch run.exe from the output file and visualize the solution with plot.py.
 ```css
 python run.py
 ```
 ```css
-g++ -O2 -I C:\ProgramData\Eigen run.cpp mesh.cpp -o output\run.exe
-output\run.exe
+g++ -O2 -I C:\ProgramData\Eigen run.cpp mesh.cpp -o run.exe
+.\run.exe
 ```
 
 ## Author
