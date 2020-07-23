@@ -1,6 +1,6 @@
 # Finite Element
 
-Finite element code developped for **academic purpose**. Both propgrams, the first written in C++ and the second in Python, solve a transport equation in two dimensions using triangle or quadrangle elements. The codes aim at giving an intuitive example of a finite element code implementation as well as the use of Eigen and Numpy sparse matrix libraries.
+Finite element code developped for **academic purpose** to solve a transport equation in two dimensions using triangle or quadrangle elements. Both codes aim at giving an intuitive example of a finite element code implementation in python and C++ as well as the use of Eigen and Numpy sparse matrix libraries.
 
 ## Use
 
