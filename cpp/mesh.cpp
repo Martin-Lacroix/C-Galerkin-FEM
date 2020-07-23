@@ -86,15 +86,15 @@ Quadrangle::Quadrangle(vector<vector<double>> nXY){
 
     for (int i=0; i<9; i++){
 
-    detJ(i) = J11(gRS[i][1])*J22(gRS[i][0])-J12(gRS[i][1])*J21(gRS[i][0]);
+        detJ(i) = J11(gRS[i][1])*J22(gRS[i][0])-J12(gRS[i][1])*J21(gRS[i][0]);
 
-    invJ11(i) = J22(gRS[i][0])/detJ(i);
-    invJ12(i) = -J12(gRS[i][1])/detJ(i);
-    invJ21(i) = -J21(gRS[i][0])/detJ(i);
-    invJ22(i) = J11(gRS[i][1])/detJ(i);
+        invJ11(i) = J22(gRS[i][0])/detJ(i);
+        invJ12(i) = -J12(gRS[i][1])/detJ(i);
+        invJ21(i) = -J21(gRS[i][0])/detJ(i);
+        invJ22(i) = J11(gRS[i][1])/detJ(i);
 
-    drN.col(i) = Vector4d {(gRS[i][1]-1)/4,(1-gRS[i][1])/4,(gRS[i][1]+1)/4,-(gRS[i][1]+1)/4};
-    dsN.col(i) = Vector4d {(gRS[i][0]-1)/4,-(gRS[i][0]+1)/4,(gRS[i][0]+1)/4,(1-gRS[i][0])/4};
+        drN.col(i) = Vector4d {(gRS[i][1]-1)/4,(1-gRS[i][1])/4,(gRS[i][1]+1)/4,-(gRS[i][1]+1)/4};
+        dsN.col(i) = Vector4d {(gRS[i][0]-1)/4,-(gRS[i][0]+1)/4,(gRS[i][0]+1)/4,(1-gRS[i][0])/4};
     }
 
     // Local shape functions
