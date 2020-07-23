@@ -1,6 +1,6 @@
 # Finite Element
 
-Finite element code developped for **academic purpose** to solve a transport equation in two dimensions using triangle or quadrangle elements. Both codes aim at giving an intuitive example of a finite element code implementation in python and C++. The nodes of an element and the domain border must be generated counterclockwise.
+Finite element code developped for **academic purpose** (and thus not optimized) to solve a transport equation in two dimensions using triangle or quadrangle elements. Both codes aim at giving an intuitive example of a finite element code implementation in python and C++. The nodes of an element and the domain border must be generated counterclockwise.
 
 ## Use
 
