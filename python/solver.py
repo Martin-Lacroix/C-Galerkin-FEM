@@ -7,8 +7,8 @@ def solver(mesh,tVec,flux,u0):
     
     tStep = [0]
     dt = tVec[1]
-    u = u0.copy()
     uStep = [u0]
+    u = u0.copy()
     end = round(tVec[0]/dt)
     
     # Solves with Euler scheme
