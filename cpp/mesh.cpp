@@ -2,6 +2,7 @@
 #include <Eigen/Sparse>
 #include <vector>
 #include "mesh.h"
+#include <omp.h>
 
 using namespace std;
 using namespace Eigen;
@@ -166,70 +167,93 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in,vector<vecto
     Sy = SparseMatrix<double>(nNbr,nNbr);
 
     typedef Triplet<double> T;
-
     vector<T> tripM;
     vector<T> tripSx;
     vector<T> tripSy;
 
-    for(int i=0; i<fNbr; i++){
+    #pragma omp parallel
+    {
+        vector<Face> faceP;
+        #pragma omp for
 
-        Face L2({nXY[fId[i][0]],nXY[fId[i][1]]});
-        faces.push_back(L2);
+        for(int i=0; i<fNbr; i++){
+
+            Face L2({nXY[fId[i][0]],nXY[fId[i][1]]});
+            faceP.push_back(L2);
+        }
+
+        #pragma omp critical
+        faces.insert(faces.end(),faceP.begin(),faceP.end());
     }
 
-    for(int i=0; i<eNbr; i++){
+    #pragma omp parallel
+    {
+        vector<T> tripMP;
+        vector<T> tripSxP;
+        vector<T> tripSyP;
+        #pragma omp for
         
-        if(eId[i].size()==4){
+        for(int i=0; i<eNbr; i++){
+            
+            if(eId[i].size()==4){
 
-            Quadrangle Q4({nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]});
-            elemsQ.push_back(Q4);
+                Quadrangle Q4({nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]});
+                //elemsQ.push_back(Q4);
 
-            for(int j=0; j<4; j++){
+                for(int j=0; j<4; j++){
 
-                // Adds to the global mass matrix
+                    // Adds to the global mass matrix
 
-                tripM.push_back(T(eId[i][0],eId[i][j],elemsQ[i].M(0,j)));
-                tripM.push_back(T(eId[i][1],eId[i][j],elemsQ[i].M(1,j)));
-                tripM.push_back(T(eId[i][2],eId[i][j],elemsQ[i].M(2,j)));
-                tripM.push_back(T(eId[i][3],eId[i][j],elemsQ[i].M(3,j)));
+                    tripMP.push_back(T(eId[i][0],eId[i][j],Q4.M(0,j)));
+                    tripMP.push_back(T(eId[i][1],eId[i][j],Q4.M(1,j)));
+                    tripMP.push_back(T(eId[i][2],eId[i][j],Q4.M(2,j)));
+                    tripMP.push_back(T(eId[i][3],eId[i][j],Q4.M(3,j)));
 
-                // Adds to the global stifness matrices
+                    // Adds to the global stifness matrices
 
-                tripSx.push_back(T(eId[i][0],eId[i][j],elemsQ[i].Sx(0,j)));
-                tripSx.push_back(T(eId[i][1],eId[i][j],elemsQ[i].Sx(1,j)));
-                tripSx.push_back(T(eId[i][2],eId[i][j],elemsQ[i].Sx(2,j)));
-                tripSx.push_back(T(eId[i][3],eId[i][j],elemsQ[i].Sx(3,j)));
+                    tripSxP.push_back(T(eId[i][0],eId[i][j],Q4.Sx(0,j)));
+                    tripSxP.push_back(T(eId[i][1],eId[i][j],Q4.Sx(1,j)));
+                    tripSxP.push_back(T(eId[i][2],eId[i][j],Q4.Sx(2,j)));
+                    tripSxP.push_back(T(eId[i][3],eId[i][j],Q4.Sx(3,j)));
 
-                tripSy.push_back(T(eId[i][0],eId[i][j],elemsQ[i].Sy(0,j)));
-                tripSy.push_back(T(eId[i][1],eId[i][j],elemsQ[i].Sy(1,j)));
-                tripSy.push_back(T(eId[i][2],eId[i][j],elemsQ[i].Sy(2,j)));
-                tripSy.push_back(T(eId[i][3],eId[i][j],elemsQ[i].Sy(3,j)));
+                    tripSyP.push_back(T(eId[i][0],eId[i][j],Q4.Sy(0,j)));
+                    tripSyP.push_back(T(eId[i][1],eId[i][j],Q4.Sy(1,j)));
+                    tripSyP.push_back(T(eId[i][2],eId[i][j],Q4.Sy(2,j)));
+                    tripSyP.push_back(T(eId[i][3],eId[i][j],Q4.Sy(3,j)));
+                }
+            }
+
+            if(eId[i].size()==3){
+
+                Triangle T3({nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]});
+                //elemsT.push_back(T3);
+
+                for(int j=0; j<3; j++){
+
+                    // Adds to the global mass matrix
+
+                    tripMP.push_back(T(eId[i][0],eId[i][j],T3.M(0,j)));
+                    tripMP.push_back(T(eId[i][1],eId[i][j],T3.M(1,j)));
+                    tripMP.push_back(T(eId[i][2],eId[i][j],T3.M(2,j)));
+
+                    // Adds to the global stifness matrices
+
+                    tripSxP.push_back(T(eId[i][0],eId[i][j],T3.Sx(0,j)));
+                    tripSxP.push_back(T(eId[i][1],eId[i][j],T3.Sx(1,j)));
+                    tripSxP.push_back(T(eId[i][2],eId[i][j],T3.Sx(2,j)));
+
+                    tripSyP.push_back(T(eId[i][0],eId[i][j],T3.Sy(0,j)));
+                    tripSyP.push_back(T(eId[i][1],eId[i][j],T3.Sy(1,j)));
+                    tripSyP.push_back(T(eId[i][2],eId[i][j],T3.Sy(2,j)));
+                }
             }
         }
 
-        if(eId[i].size()==3){
-
-            Triangle T3({nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]});
-            elemsT.push_back(T3);
-
-            for(int j=0; j<3; j++){
-
-                // Adds to the global mass matrix
-
-                tripM.push_back(T(eId[i][0],eId[i][j],elemsT[i].M(0,j)));
-                tripM.push_back(T(eId[i][1],eId[i][j],elemsT[i].M(1,j)));
-                tripM.push_back(T(eId[i][2],eId[i][j],elemsT[i].M(2,j)));
-
-                // Adds to the global stifness matrices
-
-                tripSx.push_back(T(eId[i][0],eId[i][j],elemsT[i].Sx(0,j)));
-                tripSx.push_back(T(eId[i][1],eId[i][j],elemsT[i].Sx(1,j)));
-                tripSx.push_back(T(eId[i][2],eId[i][j],elemsT[i].Sx(2,j)));
-
-                tripSy.push_back(T(eId[i][0],eId[i][j],elemsT[i].Sy(0,j)));
-                tripSy.push_back(T(eId[i][1],eId[i][j],elemsT[i].Sy(1,j)));
-                tripSy.push_back(T(eId[i][2],eId[i][j],elemsT[i].Sy(2,j)));
-            }
+        #pragma omp critical
+        {
+        tripM.insert(tripM.end(),tripMP.begin(),tripMP.end());
+        tripSx.insert(tripSx.end(),tripSxP.begin(),tripSxP.end());
+        tripSy.insert(tripSy.end(),tripSyP.begin(),tripSyP.end());
         }
     }
 
