@@ -8,7 +8,7 @@ For the Python code, move to the folder containing the source codes and directly
 ```css
 python example.py
 ```
-The C++ code requires to be compiled, for instance using minGW with the path to Eigen included. Then you may directly launch example.exe from the output file and visualize the solution with plot.py.
+The C++ code requires to be compiled with OpenMP, for instance using minGW with the path to Eigen included. Then you may directly launch example.exe from the output file and visualize the solution with plot.py.
 ```css
 g++ -O2 -fopenmp -I C:\ProgramData\Eigen example.cpp mesh.cpp -o example.exe
 .\example.exe
