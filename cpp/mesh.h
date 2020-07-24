@@ -62,8 +62,6 @@ class Mesh{
     vector<vector<int>> eId;
     vector<vector<int>> fId;
     vector<vector<double>> nXY;
-    vector<Quadrangle> elemsQ;
-    vector<Triangle> elemsT;
     vector<Face> faces;
 };
 
