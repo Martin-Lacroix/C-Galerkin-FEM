@@ -198,7 +198,6 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in,vector<vecto
             if(eId[i].size()==4){
 
                 Quadrangle Q4({nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]});
-                //elemsQ.push_back(Q4);
 
                 for(int j=0; j<4; j++){
 
@@ -226,7 +225,6 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in,vector<vecto
             if(eId[i].size()==3){
 
                 Triangle T3({nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]});
-                //elemsT.push_back(T3);
 
                 for(int j=0; j<3; j++){
 
