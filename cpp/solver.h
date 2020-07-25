@@ -10,7 +10,6 @@ using namespace Eigen;
 struct Solution{
     vector<VectorXd> uStep;
     vector<double> tStep;
-    int K;
 };
 
 Solution solver(Mesh mesh,VectorXd u0,vector<double> tVec, vector<double> flux){
