@@ -12,7 +12,7 @@ struct Solution{
     vector<double> tStep;
 };
 
-Solution solver(Mesh mesh,VectorXd u0,vector<double> tVec, vector<double> flux){
+Solution solver(Mesh mesh,VectorXd u0,vector<double> tVec,vector<double> flux){
 
     Solution sol;
     VectorXd u = u0;
