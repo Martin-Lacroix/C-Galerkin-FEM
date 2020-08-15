@@ -1,6 +1,6 @@
 # CGFEM-Transport
 
-Finite element code developped for **academic purpose** (and thus not optimized) to solve a transport equation in two dimensions using triangle or quadrangle elements. Both codes aim at giving an intuitive example of a finite element implementation in C++ python.
+Finite element code developped for **academic purpose** (and thus not optimized) to solve a transport equation in two dimensions using triangle or quadrangle elements. Both codes aim at giving an intuitive example of a finite element implementation in C++ and python.
 
 ## Use
 
