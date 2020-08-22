@@ -10,7 +10,7 @@ python diffusion.py
 ```
 For the C++ code, make sure that the Eigen library is installed and that your GCC supports OpenMP. Then move to the code folder and compile the project by providing the path to Eigen to the compiler, you may directly launch example.exe and visualize the solution with plot.py.
 ```css
-g++ -O2 -fopenmp -I C:\ProgramData\Eigen example.cpp mesh.cpp -o example.exe
+g++ -O2 -fopenmp -I path-to-Eigen\Eigen example.cpp mesh.cpp -o example.exe
 .\example.exe
 ```
 
