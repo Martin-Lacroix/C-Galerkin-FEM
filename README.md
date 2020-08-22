@@ -4,7 +4,7 @@ Finite element code developped for **academic purpose** (and thus not optimized)
 
 ## Use
 
-The nodes of an element and the domain border must be generated counterclockwise. For the Python code, move to the folder containing the source codes and directly launch example.py in any Python 3 compiler, the result is placed in an output folder.
+The nodes of an element and the domain border must be generated counterclockwise. For the Python code, move to the folder containing the source codes and directly launch an test case in any Python 3 compiler, the result is placed in an output folder.
 ```css
 python laplace.py
 python diffusion.py
