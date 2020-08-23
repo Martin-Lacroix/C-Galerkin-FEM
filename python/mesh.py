@@ -110,9 +110,9 @@ class Quadrangle:
 
 # %% 1D Line
         
-class Line:
+class Face:
 
-    def __init__(self,nXY):
+    def __init__(self,nXY,fId):
         
         gRS = np.array([-np.sqrt(3/5),np.sqrt(3/5),0])
         detJ = np.sqrt(np.sum((nXY[1]-nXY[0])**2))/2
@@ -121,9 +121,10 @@ class Line:
         
         # Computes matrices
         
+        self.fId = fId
         self.norm = np.flip(nXY[1]-nXY[0])/(2*detJ)
-        self.N = np.sum(wei*detJ*N,axis=1)
         self.M = np.dot(wei*detJ*N,N.T)
+        self.N = np.dot(N,wei*detJ)
 
 # %% Global Mesh
 
@@ -136,7 +137,6 @@ class Mesh:
         
         self.nNbr = self.nXY.shape[0]
         self.eNbr = self.eId.shape[0]
-        self.type = self.eId.shape[1]
         
         self.F = np.zeros(self.nNbr)
         self.M = sparse.dok_matrix((self.nNbr,self.nNbr))
@@ -147,12 +147,13 @@ class Mesh:
         # Computes global matrices
 
         for i in range(self.eNbr):
-           
-            if(self.type==4): elem = Quadrangle(self.nXY[self.eId[i]],fun)
-            if(self.type==3): elem = Triangle(self.nXY[self.eId[i]],fun)
+            
+            elType = self.eId[i].shape[0]
+            if(elType==4): elem = Quadrangle(self.nXY[self.eId[i]],fun)
+            if(elType==3): elem = Triangle(self.nXY[self.eId[i]],fun)
             if callable(fun): self.F[self.eId[i]] += elem.F
              
-            for j in range(self.type):
+            for j in range(elType):
          
                  self.M[self.eId[i][j],self.eId[i]] += elem.M[j]
                  self.K[self.eId[i][j],self.eId[i]] += elem.K[j]
@@ -163,27 +164,27 @@ class Mesh:
                  
     def precompute(self,fId):
 
-        face = [Line(self.nXY[nodes]) for nodes in fId]
+        face = [Face(self.nXY[idx],idx) for idx in fId]
         return face
     
-    # Apply Neumann BC
+    # Apply constant Neumann BC
 
-    def neumannFix(self,fId,face,bc):
+    def neumannFix(self,face,bc):
         
         B = np.zeros(self.nNbr)
-        for i in range(len(face)): B[fId[i]] += face[i].N*bc
+        for i in range(len(face)): B[face[i].fId] += face[i].N*bc
         return B
     
-    # Apply Neumann BC
+    # Apply variable Neumann BC
     
-    def neumannVar(self,fId,face,F):
+    def neumannVar(self,face,F):
         
         Fx,Fy = F
         B = np.zeros(self.nNbr)
         for i in range(len(face)):
             
             nx,ny = face[i].norm
-            nf = np.abs(nx*Fx[fId[i]])+np.abs(ny*Fy[fId[i]])
-            B[fId[i]] += np.dot(face[i].M,nf)
+            nf = np.abs(nx*Fx[face[i].fId])+np.abs(ny*Fy[face[i].fId])
+            B[face[i].fId] += np.dot(face[i].M,nf)
         
         return B

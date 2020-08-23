@@ -36,33 +36,32 @@ class Face{
 
     public:
 
-    Face(vector<vector<double>> nXY);
-    Vector2d flux(Vector2d fx,Vector2d fy);
+    Face(vector<vector<double>> nXY,vector<int> fId);
 
     Matrix2d M;
-    MatrixXd N;
+    Vector2d Nf;
     Vector2d norm;
+    vector<int> fId;
 };
 
 class Mesh{
 
     public:
 
-    Mesh(vector<vector<double>> nXY,vector<vector<int>> eId,vector<vector<int>> fId);
-    VectorXd flux(VectorXd fx,VectorXd fy);
+    Mesh(vector<vector<double>> nXY,vector<vector<int>> eId);
+    VectorXd neumannVar(vector<Face> face,vector<VectorXd> F);
+    VectorXd neumannFix(vector<Face> face,double bc);
+    vector<Face> precompute(vector<vector<int>> fId);
 
     int nNbr;
     int eNbr;
-    int fNbr;
 
     SparseMatrix<double> M;
     SparseMatrix<double> Sx;
     SparseMatrix<double> Sy;
 
     vector<vector<int>> eId;
-    vector<vector<int>> fId;
     vector<vector<double>> nXY;
-    vector<Face> faces;
 };
 
 #endif

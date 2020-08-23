@@ -7,14 +7,15 @@
 using namespace std;
 using namespace Eigen;
 
-Triangle::Triangle(vector<vector<double>> nXY){
+// Triangle element
 
-    Vector4d wei{-27.0/96,25.0/96,25.0/96,25.0/96};
-    vector<vector<double>> gRS{{1.0/3,1.0/3},{0.6,0.2},{0.2,0.6},{0.2,0.2}};
+Triangle::Triangle(vector<vector<double>> nXY){
 
     Matrix2d invJ;
     Vector3d drN{-1,1,0};
     Vector3d dsN{-1,0,1};
+    Vector4d wei{-27.0/96,25.0/96,25.0/96,25.0/96};
+    vector<vector<double>> gRS{{1.0/3,1.0/3},{0.6,0.2},{0.2,0.6},{0.2,0.2}};
 
     // Computes Jacobian
 
@@ -44,9 +45,11 @@ Triangle::Triangle(vector<vector<double>> nXY){
     }
 
     M = N*wei.asDiagonal()*(N.transpose())*detJ;
-    Sx = dxN*wei.asDiagonal()*(N.transpose())*detJ;
-    Sy = dyN*wei.asDiagonal()*(N.transpose())*detJ;
+    Sx = N*wei.asDiagonal()*(dxN.transpose())*detJ;
+    Sy = N*wei.asDiagonal()*(dyN.transpose())*detJ;
 }
+
+// Quadrangle element
 
 Quadrangle::Quadrangle(vector<vector<double>> nXY){
 
@@ -108,59 +111,44 @@ Quadrangle::Quadrangle(vector<vector<double>> nXY){
         N(3,i) = (1-gRS[i][0])*(1+gRS[i][1])/4;
 
         for(int j=0; j<4; j++){
-
             dxN(j,i) += drN(j,i)*invJ11(i)+dsN(j,i)*invJ12(i);
             dyN(j,i) += drN(j,i)*invJ12(i)+dsN(j,i)*invJ22(i);
         }
     }
 
     M = N*(wei.asDiagonal()*detJ).asDiagonal()*(N.transpose());
-    Sx = dxN*(wei.asDiagonal()*detJ).asDiagonal()*(N.transpose());
-    Sy = dyN*(wei.asDiagonal()*detJ).asDiagonal()*(N.transpose());
+    Sx = N*(wei.asDiagonal()*detJ).asDiagonal()*(dxN.transpose());
+    Sy = N*(wei.asDiagonal()*detJ).asDiagonal()*(dyN.transpose());
 }
 
-Face::Face(vector<vector<double>> nXY){
+// Face element
 
-    N = MatrixXd(2,3);
+Face::Face(vector<vector<double>> nXY,vector<int> fId_in){
+
+    MatrixXd N(2,3);
     Vector3d wei{5.0/9,5.0/9,8.0/9};
     vector<double> gRS{-sqrt(3.0/5),sqrt(3.0/5),0};
-    Vector3d v{nXY[1][0]-nXY[0][0],nXY[1][1]-nXY[0][1],0};
+    Vector2d v{nXY[1][0]-nXY[0][0],nXY[1][1]-nXY[0][1]};
 
     // Outer normal
-
-    norm = {v(1),v(0)};
+    
     double detJ = sqrt(v(0)*v(0)+v(1)*v(1))/2;
-    norm /= sqrt(norm(0)*norm(0)+norm(1)*norm(1));
+    norm = {v(1)/(2*detJ),v(0)/(2*detJ)};
 
-    // Mass and local shape functions
+    // Other attributes
 
     for(int i=0; i<3; i++){N.col(i) = Vector2d {(1-gRS[i])/2,(1+gRS[i])/2};}
     M = N*wei.asDiagonal()*(N.transpose())*detJ;
+    Nf = N*wei*detJ;
+    fId = fId_in;
 }
 
-Vector2d Face::flux(Vector2d fx,Vector2d fy){
-
-    Vector2d Fx = norm[0]*fx;
-    Vector2d Fy = norm[1]*fy;
-
-    Fx(0) = abs(Fx(0));
-    Fx(1) = abs(Fx(1));
-    Fy(0) = abs(Fy(0));
-    Fy(1) = abs(Fy(1));
-
-    Vector2d F = M*(Fx+Fy);
-    return F;
-}
-
-Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in,vector<vector<int>> fId_in){
+Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
 
     nXY = nXY_in;
     eId = eId_in;
-    fId = fId_in;
-
     nNbr = nXY.size();
     eNbr = eId.size();
-    fNbr = fId.size();
 
     M = SparseMatrix<double>(nNbr,nNbr);
     Sx = SparseMatrix<double>(nNbr,nNbr);
@@ -173,76 +161,36 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in,vector<vecto
 
     #pragma omp parallel
     {
-        vector<Face> faceP;
-        #pragma omp for
-
-        for(int i=0; i<fNbr; i++){
-
-            Face L2({nXY[fId[i][0]],nXY[fId[i][1]]});
-            faceP.push_back(L2);
-        }
-
-        #pragma omp critical
-        faces.insert(faces.end(),faceP.begin(),faceP.end());
-    }
-
-    #pragma omp parallel
-    {
         vector<T> tripMP;
         vector<T> tripSxP;
         vector<T> tripSyP;
+
         #pragma omp for
-        
         for(int i=0; i<eNbr; i++){
             
             if(eId[i].size()==4){
-
-                Quadrangle Q4({nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]});
+                Quadrangle elem({nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]});
 
                 for(int j=0; j<4; j++){
+                    for(int k=0; k<4; k++){
 
-                    // Adds to the global mass matrix
-
-                    tripMP.push_back(T(eId[i][0],eId[i][j],Q4.M(0,j)));
-                    tripMP.push_back(T(eId[i][1],eId[i][j],Q4.M(1,j)));
-                    tripMP.push_back(T(eId[i][2],eId[i][j],Q4.M(2,j)));
-                    tripMP.push_back(T(eId[i][3],eId[i][j],Q4.M(3,j)));
-
-                    // Adds to the global stifness matrices
-
-                    tripSxP.push_back(T(eId[i][0],eId[i][j],Q4.Sx(0,j)));
-                    tripSxP.push_back(T(eId[i][1],eId[i][j],Q4.Sx(1,j)));
-                    tripSxP.push_back(T(eId[i][2],eId[i][j],Q4.Sx(2,j)));
-                    tripSxP.push_back(T(eId[i][3],eId[i][j],Q4.Sx(3,j)));
-
-                    tripSyP.push_back(T(eId[i][0],eId[i][j],Q4.Sy(0,j)));
-                    tripSyP.push_back(T(eId[i][1],eId[i][j],Q4.Sy(1,j)));
-                    tripSyP.push_back(T(eId[i][2],eId[i][j],Q4.Sy(2,j)));
-                    tripSyP.push_back(T(eId[i][3],eId[i][j],Q4.Sy(3,j)));
+                        tripMP.push_back(T(eId[i][k],eId[i][j],elem.M(k,j)));
+                        tripSxP.push_back(T(eId[i][k],eId[i][j],elem.Sx(k,j)));
+                        tripSyP.push_back(T(eId[i][k],eId[i][j],elem.Sy(k,j)));
+                    }
                 }
             }
 
             if(eId[i].size()==3){
-
-                Triangle T3({nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]});
+                Triangle elem({nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]});
 
                 for(int j=0; j<3; j++){
+                    for(int k=0; k<3; k++){
 
-                    // Adds to the global mass matrix
-
-                    tripMP.push_back(T(eId[i][0],eId[i][j],T3.M(0,j)));
-                    tripMP.push_back(T(eId[i][1],eId[i][j],T3.M(1,j)));
-                    tripMP.push_back(T(eId[i][2],eId[i][j],T3.M(2,j)));
-
-                    // Adds to the global stifness matrices
-
-                    tripSxP.push_back(T(eId[i][0],eId[i][j],T3.Sx(0,j)));
-                    tripSxP.push_back(T(eId[i][1],eId[i][j],T3.Sx(1,j)));
-                    tripSxP.push_back(T(eId[i][2],eId[i][j],T3.Sx(2,j)));
-
-                    tripSyP.push_back(T(eId[i][0],eId[i][j],T3.Sy(0,j)));
-                    tripSyP.push_back(T(eId[i][1],eId[i][j],T3.Sy(1,j)));
-                    tripSyP.push_back(T(eId[i][2],eId[i][j],T3.Sy(2,j)));
+                        tripMP.push_back(T(eId[i][k],eId[i][j],elem.M(k,j)));
+                        tripSxP.push_back(T(eId[i][k],eId[i][j],elem.Sx(k,j)));
+                        tripSyP.push_back(T(eId[i][k],eId[i][j],elem.Sy(k,j)));
+                    }
                 }
             }
         }
@@ -254,17 +202,55 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in,vector<vecto
         tripSy.insert(tripSy.end(),tripSyP.begin(),tripSyP.end());
         }
     }
-
     M.setFromTriplets(tripM.begin(),tripM.end());
     Sx.setFromTriplets(tripSx.begin(),tripSx.end());
     Sy.setFromTriplets(tripSy.begin(),tripSy.end());
 }
 
-VectorXd Mesh::flux(VectorXd fx,VectorXd fy){
-    
-    VectorXd F(nNbr);
-    F.setZero();
+// Precompute Neumann BC
 
-    for(int i=0; i<fNbr; i++){F(fId[i]) += faces[i].flux(fx(fId[i]),fy(fId[i]));}
-    return F;
+vector<Face> Mesh::precompute(vector<vector<int>> fId){
+
+    vector<Face> face;
+    #pragma omp parallel
+    {
+        vector<Face> faceP;
+        #pragma omp for
+
+        for(int i=0; i<fId.size(); i++){
+            Face L2({nXY[fId[i][0]],nXY[fId[i][1]]},fId[i]);
+            faceP.push_back(L2);
+        }
+        #pragma omp critical
+        face.insert(face.end(),faceP.begin(),faceP.end());
+    }
+    return face;
+}
+
+// Apply constant Neumann BC
+
+VectorXd Mesh::neumannFix(vector<Face> face, double bc){
+
+    VectorXd B(nNbr);B.setZero();
+    for(int i=0; i<face.size(); i++){B(face[i].fId) += face[i].Nf*bc;}
+    return B;
+}
+
+// Apply variable Neumann BC
+
+VectorXd Mesh::neumannVar(vector<Face> face, vector<VectorXd> F){
+    
+    VectorXd B(nNbr);
+    B.setZero();
+
+    for(int i=0; i<face.size(); i++){
+        
+        Matrix2d flux;
+        flux.col(0) = Vector2d {F[0](face[i].fId[0]),F[0](face[i].fId[1])};
+        flux.col(1) = Vector2d {F[1](face[i].fId[0]),F[1](face[i].fId[1])};
+        Vector2d bc = face[i].M*flux.cwiseAbs()*face[i].norm.cwiseAbs();
+        B(face[i].fId[0]) += bc[0];
+        B(face[i].fId[1]) += bc[1];
+    }
+    return B;
 }

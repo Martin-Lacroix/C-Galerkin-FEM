@@ -7,25 +7,30 @@
 using namespace std;
 using namespace Eigen;
 
-struct Solution{
-    vector<VectorXd> uStep;
-    vector<double> tStep;
+struct Data{
+
+    double dt;
+    double tMax;
+    VectorXd u0;
+    vector<double> flux;
+    vector<vector<int>> fId;
 };
 
-Solution solver(Mesh mesh,VectorXd u0,vector<double> tVec,vector<double> flux){
+vector<VectorXd> transport(Mesh mesh,Data data){
 
-    Solution sol;
-    VectorXd u = u0;
-    double dt = tVec[1];
-    vector<double> tStep{0};
-    vector<VectorXd> uStep{u0};
-    int end = round(tVec[0]/dt);
+    double dt = data.dt;
+    VectorXd u = data.u0;
+    vector<VectorXd> U{data.u0};
+    int end = round(data.tMax/dt);
+    vector<double> flux = data.flux;
+    vector<vector<int>> fId = data.fId;
 
-    // Flux and sparse solver
+    // BC and sparse solver
 
     auto Fx = [flux](VectorXd u){return flux[0]*u;};
     auto Fy = [flux](VectorXd u){return flux[1]*u;};
     
+    vector<Face> face = mesh.precompute(fId);
     SimplicialLDLT<SparseMatrix<double>> sparSolve;
     sparSolve.compute(mesh.M);
 
@@ -33,20 +38,13 @@ Solution solver(Mesh mesh,VectorXd u0,vector<double> tVec,vector<double> flux){
 
     for(int i=0; i<end; i++){
 
-        VectorXd fx = Fx(u);
-        VectorXd fy = Fy(u);
+        vector<VectorXd> F{Fx(u),Fy(u)};
+        VectorXd B = mesh.neumannVar(face,F);
+        VectorXd S = mesh.Sx.transpose()*F[0]+mesh.Sy.transpose()*F[1];
 
-        VectorXd F = mesh.flux(fx,fy);
-        VectorXd S = mesh.Sx*fx+mesh.Sy*fy;
-        u += dt*sparSolve.solve(S-F);
-
+        u += dt*sparSolve.solve(S-B);
         for(int j=0; j<u.size(); j++){u[j] = abs(u[j]);}
-
-        uStep.push_back(u);
-        tStep.push_back((i+1)*dt);
+        U.push_back(u);
     }
-
-    sol.tStep = tStep;
-    sol.uStep = uStep;
-    return sol;
+    return U;
 }

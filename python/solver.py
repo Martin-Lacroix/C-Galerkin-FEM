@@ -29,7 +29,7 @@ def transport(mesh,data):
         # Update and oundary conditions
         
         F = flux(u)
-        B = mesh.neumannVar(fId,face,F)
+        B = mesh.neumannVar(face,F)
         S = mesh.Sx.dot(F[0])+mesh.Sy.dot(F[1])
         
         # Solves the system
@@ -95,7 +95,7 @@ def advection(mesh,data):
     # Boundary conditions
     
     face = mesh.precompute(fId)
-    B = mesh.neumannFix(fId,face,bcNeu)
+    B = mesh.neumannFix(face,bcNeu)
     
     A[nId] = 0
     B[nId] = 0

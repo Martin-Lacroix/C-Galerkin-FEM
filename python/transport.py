@@ -7,31 +7,31 @@ import os
 
 # %% Functions
 
-def build(elem,size,xyMax):
+def meshparam(elem,size,xyMax):
     
     # Node coordinates
     
     eId = []
     node = size+1
     nXY = np.zeros((node**2,2))
-    idx = [i for i in range(node-1,node**2-node-1,node)]
+    idx = [i for i in range(size,node*size-1,node)]
     for i in range(node): nXY[i*node:(i+1)*node] = [[j,i] for j in range(node)]
     nXY *= xyMax/size
     
     # Element indices
     
-    for i in range(node**2-node-1):
-        if (i not in idx) and (elem==4): eId += [[i,i+1,i+node+1,i+node]]
-        if (i not in idx) and (elem==3): eId += [[i,i+1,i+node]]+[[i+1,i+node+1,i+node]]
+    for i in range(node*size-1):
+        if (i not in idx):
+            if (elem==4): eId += [[i,i+1,i+node+1,i+node]]
+            if (elem==3): eId += [[i,i+1,i+node]]+[[i+1,i+node+1,i+node]]
 
     # Face indices for BC
     
-    x1 = np.arange(size)
-    x2 = np.arange(size,node**2,node)
-    x3 = np.arange(x2[-1]-1,x2[-1]-node,-1)
-    x4 = np.flip(np.arange(node,size**2,node))
-    x = np.concatenate((x1,x2,x3,x4),axis=0)
-    fId = np.transpose([x,np.roll(x,-1)])
+    f1 = np.arange(size,node**2,node)
+    f2 = np.arange(f1[-1]-1,f1[-1]-node,-1)
+    f3 = np.flip(np.arange(node,size**2,node))
+    fId = np.concatenate((np.arange(size),f1,f2,f3))
+    fId = np.transpose([fId,np.roll(fId,-1)])
     return nXY,eId,fId
     
 def gaussian(nXY,xyMax):
@@ -51,7 +51,7 @@ size = 50
 xyMax = 10
 
 def flux(u): return [6*u,-6*u]
-nXY,eId,fId = build(elem,size,xyMax)
+nXY,eId,fId = meshparam(elem,size,xyMax)
 u0 = gaussian(nXY,xyMax)
 
 data = {}
