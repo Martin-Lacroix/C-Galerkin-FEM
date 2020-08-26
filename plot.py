@@ -3,12 +3,8 @@ import numpy as np
 
 # %% Read File
 
-try:
-    u = np.genfromtxt("output/solution.txt",delimiter=',')
-    nXY = np.genfromtxt("output/nXY.txt",delimiter=',')
-except:
-    u = np.load("output/solution.npy")
-    nXY = np.load("output/nXY.npy")
+u = np.genfromtxt("output/solution.txt",delimiter=',')
+nXY = np.genfromtxt("output/nXY.txt",delimiter=',')
 
 size = np.sqrt(nXY.shape[0]).astype(int)
 dx = np.abs(nXY[0,0]-nXY[1,0])
