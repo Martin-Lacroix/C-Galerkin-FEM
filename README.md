@@ -1,6 +1,6 @@
 # CGFEM-Example
 
-Finite element code developped for **academic purpose** (and thus not optimized) to solve differential equations in two dimensions using triangle or quadrangle elements. The code aim at giving an intuitive example of a finite element implementation in C++ language.
+Finite element code developped for **Academic Purpose** (and thus not optimized) to solve differential equations in two dimensions using triangle or quadrangle elements. The code aim at giving an intuitive example of a finite element implementation in C++ language.
 
 ## Use
 
