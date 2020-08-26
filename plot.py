@@ -5,7 +5,6 @@ import numpy as np
 
 u = np.genfromtxt("output/solution.txt",delimiter=',')
 nXY = np.genfromtxt("output/nXY.txt",delimiter=',')
-
 size = np.sqrt(nXY.shape[0]).astype(int)
 dx = np.abs(nXY[0,0]-nXY[1,0])
     
