@@ -73,7 +73,7 @@ VectorXd gaussian(vector<vector<double>> nXY,double xyMax){
     return u;
 }
 
-// Solves the transport equatuion du(t,x,y)/dt + ∇f(u) = 0
+// Solves the transport equation du(t,x,y)/dt + ∇f(u) = 0
 
 int main(){
 
