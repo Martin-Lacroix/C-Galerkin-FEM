@@ -4,7 +4,6 @@
 #include "solver.h"
 #include <fstream>
 #include <vector>
-#include <time.h>
 #include "mesh.h"
 
 using namespace std;
@@ -15,6 +14,7 @@ struct Param{
     vector<vector<double>> nXY;
     vector<vector<int>> eId;
     vector<vector<int>> fId;
+    vector<int> nId;
 };
 
 Param meshParam(int elem,int size,double xyMax){
@@ -24,7 +24,8 @@ Param meshParam(int elem,int size,double xyMax){
     vector<int> idx;
     int node = size+1;
     vector<vector<int>> eId;
-    vector<vector<int>> fId(4*size,vector<int>(2));
+    vector<int> nId(2*size+1);
+    vector<vector<int>> fId(2*size,vector<int>(2));
     vector<vector<double>> nXY(node*node,vector<double>(2));
     for(int i=size; i<node*size-1; i+=node){idx.push_back(i);}
 
@@ -38,66 +39,59 @@ Param meshParam(int elem,int size,double xyMax){
 
     // Element indices
 
-    for(int i=0; i<node*node-node-1; i++){if(i!=idx[k]){
+    for(int i=0; i<node*size-1; i++){if(i!=idx[k]){
+
         if(elem==4){eId.push_back({i,i+1,i+node+1,i+node});}
         if(elem==3){eId.push_back({i,i+1,i+node});eId.push_back({i+1,i+node+1,i+node});}}
         else{k++;}
     }
 
-    // Boundary face indices
+    // Boundary node and face indices
 
-    for(int i=0; i<node-1; i++){
+    for(int i=0; i<node; i++){nId[i] = i;}
+    for(int i=0; i<size; i++){nId[node+i] = (i+1)*node;}
+    for(int i=0; i<size; i++){
         
-        fId[i] = {i,i+1};
-        fId[(node-1)+i] = {(i+1)*node-1,(i+2)*node-1};
-        fId[2*(node-1)+i] = {node*node-i-1,node*node-i-2};
-        fId[3*(node-1)+i] = {(node-1-i)*node,(node-2-i)*node};
+        fId[i] = {(i+1)*node-1,(i+2)*node-1};
+        fId[size+i] = {node*node-1-i,node*node-2-i};
     }
 
     param.nXY = nXY;
     param.eId = eId;
+    param.nId = nId;
     param.fId = fId;
     return param;
 }
 
-// Gaussian initial solution
-
-VectorXd gaussian(vector<vector<double>> nXY,double xyMax){
-    
-    double mu = xyMax/2;
-    int nNbr = nXY.size();
-    VectorXd u(nXY.size());
-
-    for(int i=0; i<nNbr; i++){u(i) = exp(-pow((nXY[i][0]-mu),2)/2-pow((nXY[i][1]-mu),2)/2);}
-    u /= u.maxCoeff();
-    return u;
-}
+// Solves the steady advection equation a·∇u(x,y)-kΔu(x,y) = 0
 
 int main(){
 
-    int elem = 3;
+    int type = 3;
     int size = 50;
-    double xyMax = 10;
-    vector<double> flux{6,-6};
-    Param param = meshParam(elem,size,xyMax);
-    VectorXd u0 = gaussian(param.nXY,xyMax);
+    double xyMax = 1;
+
+    Param param = meshParam(type,size,xyMax);
+    auto fun = [](MatrixXd xy){return xy.col(0).array().pow(0);};
+    vector<double> bcNeu(param.fId.size(),-0.1);
+    vector<double> bcDir(param.nId.size(),0);
 
     Data data;
-    data.u0 = u0;
-    data.tMax = 1;
-    data.dt = 0.001;
-    data.flux = {6,-6};
+    data.k = 1;
+    data.a = {3,3};
+    data.fun = fun;
+    data.bcDir = bcDir;
+    data.bcNeu = bcNeu;
+    data.nId = param.nId;
     data.fId = param.fId;
 
     // Mesh and solver
 
-    const clock_t start1 = clock();
     Mesh mesh(param.nXY,param.eId);
-    cout << "Mesh: " << float(clock()-start1)/CLOCKS_PER_SEC << " [sec]" << endl;
-
-    const clock_t start2 = clock();
-    vector<VectorXd> u = transport(mesh,data);
-    cout << "Solver: " << float(clock()-start2)/CLOCKS_PER_SEC << " [sec]" << endl;
+    cout << "\nMesh: done" << endl;
+    
+    vector<VectorXd> u = advection(mesh,data);
+    cout << "Solver: done" << endl;
 
     // Writes the file
 
@@ -110,9 +104,10 @@ int main(){
     }
 
     for (int i=0; i<u.size(); i++){
-        for (int j=0; j<u0.size()-1; j++){solution << u[i][j] << ",";}
-        solution << u[i][u0.size()-1] << "\n";
+        for (int j=0; j<u[0].size()-1; j++){solution << u[i][j] << ",";}
+        solution << u[i][u[0].size()-1] << "\n";
     }
 
+    cout << "Writing: done\n" << endl;
     return 0;
 }
