@@ -63,7 +63,7 @@ Param meshParam(int elem,int size,double xyMax){
     return param;
 }
 
-// Solves the steady advection equation a·∇u(x,y)-kΔu(x,y) = 0
+// Solves the steady advection equation a·∇u(x,y) - kΔu(x,y) = 0
 
 int main(){
 
