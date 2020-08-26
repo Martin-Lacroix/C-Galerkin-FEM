@@ -60,7 +60,7 @@ Param meshParam(int elem,int size,double xyMax){
     return param;
 }
 
-// Solves the laplace equation Δu(x,y) = f(x,y)
+// Solves the laplace equation -Δu(x,y) = f(x,y)
 
 int main(){
 
