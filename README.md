@@ -11,7 +11,6 @@ g++ -O2 -fopenmp -I path-to-Eigen\Eigen example.cpp mesh.cpp -o example.exe
 You may run the executable and visualize the solution with plot.py. Note that the nodes of an element and the domain borders must be generated counterclockwise.
 ```css
 .\example.exe
-cd ..
 python plot.py
 ```
 
