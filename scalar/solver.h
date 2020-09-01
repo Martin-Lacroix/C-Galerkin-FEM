@@ -22,6 +22,8 @@ struct Data{
     function<vector<VectorXd>(VectorXd)> flux;
 };
 
+// Solves the transport equation du(t,x,y)/dt + ∇f(u) = 0
+
 vector<VectorXd> transport(Mesh mesh,Data data){
 
     VectorXd u = data.u0;
@@ -52,6 +54,8 @@ vector<VectorXd> transport(Mesh mesh,Data data){
     return U;
 }
 
+// Solves the laplace equation -Δu(x,y) = f(x,y)
+
 vector<VectorXd> laplace(Mesh mesh,Data data){
 
     vector<double> bc = data.bcDir;
@@ -71,6 +75,8 @@ vector<VectorXd> laplace(Mesh mesh,Data data){
     vector<VectorXd> U{u};
     return U;
 }
+
+// Solves the steady advection-diffusion equation a·∇u(x,y) - kΔu(x,y) = 0
 
 vector<VectorXd> advection(Mesh mesh,Data data){
 
@@ -105,6 +111,8 @@ vector<VectorXd> advection(Mesh mesh,Data data){
     return U;
 }
 
+// Solves the unsteady diffusion equation du(t,x,y)/dt - kΔu(t,xy) = 0
+
 vector<VectorXd> diffusion(Mesh mesh,Data data){
 
     VectorXd u = data.u0;
@@ -118,7 +126,7 @@ vector<VectorXd> diffusion(Mesh mesh,Data data){
     SparseLU<SparseMatrix<double>> solver;
     SparseMatrix<double> M = mesh.matrix2D("M");
     SparseMatrix<double> MK = M-data.k*data.dt*mesh.matrix2D("K");
-    M = mesh.dirichletBC(M,data.nId);
+    M = mesh.dirichletBC(M,nId);
     solver.compute(M);
 
     // Solves with Euler scheme

@@ -15,23 +15,28 @@ class Element{
     Element(vector<vector<double>> nXY,int idx);
 
     int type;
+    int gPts;
     int index;
-    MatrixXd M;
-    MatrixXd K;
-    MatrixXd Sx;
-    MatrixXd Sy;
-    MatrixXd Ne;
+
+    VectorXd detJ;
+    MatrixXd dxN;
+    MatrixXd dyN;
     MatrixXd xy;
+    MatrixXd N;
+    VectorXd w;
 };
 
 class Face{
 
     public:
 
-    Face(vector<vector<double>> nXY,vector<int> fId);
+    Face(vector<vector<double>> nXY,vector<int> fId,int idx);
 
-    Matrix2d M;
-    Vector2d Ne;
+    int index;
+    double detJ;
+
+    MatrixXd N;
+    VectorXd w;
     Vector2d norm;
     vector<int> fId;
 };
@@ -42,12 +47,11 @@ class Mesh{
 
     Mesh(vector<vector<double>> nXY,vector<vector<int>> eId);
 
-    SparseMatrix<double> dirichletBC(SparseMatrix<double> A,vector<int> nId);
-    VectorXd neumannBC2(vector<Face> face,vector<VectorXd> F);
-    VectorXd neumannBC1(vector<Face> face,vector<double> bc);
-    VectorXd vector1D(function<VectorXd(MatrixXd)> fun);
+    SparseMatrix<double> dirichletBC1(SparseMatrix<double> A,vector<int> nId,int dim);
+    VectorXd dirichletBC2(VectorXd b,vector<int> nId,vector<double> bc,int dim);
+    VectorXd neumannBC(vector<Face> face,vector<Vector2d> bc);
+    SparseMatrix<double> matrix2D(double E,double v);
     vector<Face> setFace(vector<vector<int>> fId);
-    SparseMatrix<double> matrix2D(string name);
 
     vector<Element> eList;
     vector<vector<int>> eId;
