@@ -19,7 +19,7 @@ struct Data{
     vector<vector<int>> fId;
 };
 
-// Solves a static linear elsaticity equation ∇·σ(u) + g = 0
+// Solves a static linear elsaticity equation ∇·σ(u) = 0
 
 vector<VectorXd> elasticity(Mesh mesh,Data data){
 
