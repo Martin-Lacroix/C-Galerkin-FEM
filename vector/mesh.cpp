@@ -10,8 +10,6 @@ using namespace Eigen;
 typedef Triplet<double> T;
 typedef SparseMatrix<double> SM;
 
-#include <iostream>
-
 // Triangle or quadrangle 2D element
 
 Elem::Elem(vector<vector<double>> nXY,int idx){
