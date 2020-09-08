@@ -8,7 +8,7 @@ First, make sure that the Eigen library is installed and that your GCC supports 
 ```css
 g++ -O2 -fopenmp -I path-to-Eigen\Eigen example.cpp mesh.cpp -o example.exe
 ```
-You may run the executable and visualize the solution with plot1.py or plot2.py. Note that the nodes of an element and the domain borders must be generated counterclockwise.
+You may run the executable and visualize the solution with plot1.py or plot2.py. Note that the nodes of an element and the domain borders must be assigned counterclockwise.
 ```css
 .\example.exe
 python plot.py
