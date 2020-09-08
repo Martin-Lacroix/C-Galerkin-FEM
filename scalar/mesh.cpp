@@ -7,10 +7,12 @@
 
 using namespace std;
 using namespace Eigen;
+typedef Triplet<double> T;
+typedef SparseMatrix<double> SM;
 
 // Triangle or quadrangle 2D element
 
-Element::Element(vector<vector<double>> nXY,int idx){
+Elem::Elem(vector<vector<double>> nXY,int idx){
 
     index = idx;
     type = nXY.size();
@@ -134,7 +136,7 @@ Face::Face(vector<vector<double>> nXY,vector<int> fId_in,int idx){
     norm = {v(0)/(2*detJ),v(1)/(2*detJ)};
 }
 
-// Builds the elements of the mesh
+// Builds the Elems of the mesh
 
 Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
 
@@ -145,7 +147,7 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
 
     #pragma omp parallel
     {
-        vector<Element> eListP;
+        vector<Elem> eListP;
         #pragma omp for
 
         for(int i=0; i<eNbr; i++){
@@ -154,22 +156,21 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
             vector<vector<double>> nXY_el;
             if(type==3){nXY_el = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]};}
             if(type==4){nXY_el = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]};}
-            Element elem(nXY_el,i);
+            Elem elem(nXY_el,i);
             eListP.push_back(elem);
         }
         #pragma omp critical
         eList.insert(eList.end(),eListP.begin(),eListP.end());
     }
-    auto compare = [](const Element& x,const Element& y){return x.index<y.index;};
+    auto compare = [](const Elem& x,const Elem& y){return x.index<y.index;};
     sort(eList.begin(),eList.end(),compare);
 }
 
 // Computes the global matrices
 
-SparseMatrix<double> Mesh::matrix2D(string name){
+SM Mesh::matrix2D(string name){
 
-    SparseMatrix<double> Mat(nNbr,nNbr);
-    typedef Triplet<double> T;
+    SM Mat(nNbr,nNbr);
     vector<T> triplet;
 
     #pragma omp parallel
@@ -179,7 +180,7 @@ SparseMatrix<double> Mesh::matrix2D(string name){
 
         for(int i=0; i<eNbr; i++){
 
-            Element elem = eList[i];
+            Elem elem = eList[i];
             MatrixXd A(elem.type,elem.type);
             VectorXd wJ = elem.w.asDiagonal()*elem.detJ;
 
@@ -202,7 +203,7 @@ SparseMatrix<double> Mesh::matrix2D(string name){
     return Mat;
 }
 
-// Integrates N*fun(x,y) over elements
+// Integrates N*fun(x,y) over Elems
 
 VectorXd Mesh::vector1D(function<VectorXd(MatrixXd)> fun){
 
@@ -211,7 +212,7 @@ VectorXd Mesh::vector1D(function<VectorXd(MatrixXd)> fun){
 
     for(int i; i<eNbr; i++){
 
-        Element elem = eList[i];
+        Elem elem = eList[i];
         VectorXd wJ = elem.w.asDiagonal()*elem.detJ;
         VectorXd elF = elem.N*wJ.asDiagonal()*fun(elem.xy);
         for(int j=0; j<elem.type; j++){F(eId[i][j]) += elF[j];}
@@ -243,7 +244,7 @@ vector<Face> Mesh::setFace(vector<vector<int>> fId){
 
 // Apply constant Neumann BC
 
-VectorXd Mesh::neumannBC1(vector<Face> fList,vector<double> bc){
+VectorXd Mesh::neumannBC1(vector<Face> &fList,vector<double> bc){
 
     VectorXd B(nNbr);
     B.setZero();
@@ -259,7 +260,7 @@ VectorXd Mesh::neumannBC1(vector<Face> fList,vector<double> bc){
 
 // Apply variable Neumann BC
 
-VectorXd Mesh::neumannBC2(vector<Face> fList,vector<VectorXd> F){
+VectorXd Mesh::neumannBC2(vector<Face> &fList,vector<VectorXd> F){
     
     VectorXd B(nNbr);
     B.setZero();
@@ -283,15 +284,15 @@ VectorXd Mesh::neumannBC2(vector<Face> fList,vector<VectorXd> F){
 
 // Prepare the matrix for Dirichlet BC
 
-SparseMatrix<double> Mesh::dirichletBC(SparseMatrix<double> A,vector<int> nId){
+SM Mesh::dirichletBC(SM A,vector<int> nId){
 
     VectorXd I(nNbr);
     I.setOnes();
 
     for(int i=0; i<nId.size(); i++){I(nId[i]) = 0;}
-    SparseMatrix<double> Ad = I.asDiagonal()*A;
-    Ad = Ad.pruned();
+    SM Ad = I.asDiagonal()*A;
+    Ad = Ad.pruned(1,1e-16);
 
     for(int i=0; i<nId.size(); i++){Ad.insert(nId[i],nId[i]) = 1;}
-    return Ad.pruned();
+    return Ad.pruned(1,1e-16);
 }

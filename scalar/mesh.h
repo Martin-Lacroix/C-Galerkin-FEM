@@ -7,12 +7,13 @@
 
 using namespace std;
 using namespace Eigen;
+typedef SparseMatrix<double> SM;
 
-class Element{
+class Elem{
 
     public:
 
-    Element(vector<vector<double>> nXY,int idx);
+    Elem(vector<vector<double>> nXY,int idx);
 
     int type;
     int gPts;
@@ -47,14 +48,14 @@ class Mesh{
 
     Mesh(vector<vector<double>> nXY,vector<vector<int>> eId);
 
-    SparseMatrix<double> dirichletBC(SparseMatrix<double> A,vector<int> nId);
-    VectorXd neumannBC2(vector<Face> face,vector<VectorXd> F);
-    VectorXd neumannBC1(vector<Face> face,vector<double> bc);
+    VectorXd neumannBC2(vector<Face> &fList,vector<VectorXd> F);
+    VectorXd neumannBC1(vector<Face> &fList,vector<double> bc);
     VectorXd vector1D(function<VectorXd(MatrixXd)> fun);
     vector<Face> setFace(vector<vector<int>> fId);
-    SparseMatrix<double> matrix2D(string name);
+    SM dirichletBC(SM A,vector<int> nId);
+    SM matrix2D(string name);
 
-    vector<Element> eList;
+    vector<Elem> eList;
     vector<vector<int>> eId;
     vector<vector<double>> nXY;
 

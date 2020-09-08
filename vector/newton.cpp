@@ -66,7 +66,7 @@ Param meshParam(int type,int size,double xyMax){
 
 int main(){
 
-    int type = 4;
+    int type = 3;
     int size = 50;
     double xyMax = 4;
 
@@ -77,6 +77,8 @@ int main(){
     Data data;
     data.E = 2;
     data.v = 1.0/3;
+    data.step = 10;
+    data.du = 0.001;
     data.bcNeu = bcNeu;
     data.fId = param.fId;
     data.nIdx = param.nIdx;
@@ -88,7 +90,7 @@ int main(){
 
     Mesh mesh(param.nXY,param.eId);
     cout << "\nMesh: done" << endl;
-    vector<VectorXd> ue = elasticity(mesh,data);
+    vector<VectorXd> ue = newton(mesh,data);
     cout << "Solver: done" << endl;
 
     // Writes the file

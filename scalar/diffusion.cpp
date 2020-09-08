@@ -107,8 +107,8 @@ int main(){
     ofstream solution("../output/solution.txt");
     ofstream nXY("../output/nXY.txt");
 
-    for (int i=0; i<param.nXY.size(); i++){
-        nXY << param.nXY[i][0] << "," << param.nXY[i][1] << "\n";
+    for (int i=0; i<mesh.nXY.size(); i++){
+        nXY << mesh.nXY[i][0] << "," << mesh.nXY[i][1] << "\n";
     }
 
     for (int i=0; i<u.size(); i++){

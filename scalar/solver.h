@@ -6,6 +6,7 @@
 
 using namespace std;
 using namespace Eigen;
+typedef SparseMatrix<double> SM;
 
 struct Data{
 
@@ -24,7 +25,7 @@ struct Data{
 
 // Solves the transport equation du(t,x,y)/dt + ∇f(u) = 0
 
-vector<VectorXd> transport(Mesh mesh,Data data){
+vector<VectorXd> transport(Mesh &mesh,Data data){
 
     VectorXd u = data.u0;
     vector<VectorXd> U{data.u0};
@@ -32,11 +33,11 @@ vector<VectorXd> transport(Mesh mesh,Data data){
 
     // BC and sparse solver
     
-    SparseLU<SparseMatrix<double>> solver;
+    SparseLU<SM> solver;
     vector<Face> face = mesh.setFace(data.fId);
-    SparseMatrix<double> Sx = mesh.matrix2D("Sx").transpose();
-    SparseMatrix<double> Sy = mesh.matrix2D("Sy").transpose();
-    SparseMatrix<double> M = mesh.matrix2D("M");
+    SM Sx = mesh.matrix2D("Sx").transpose();
+    SM Sy = mesh.matrix2D("Sy").transpose();
+    SM M = mesh.matrix2D("M");
     solver.compute(M);
 
     // Solves with Euler scheme
@@ -56,7 +57,7 @@ vector<VectorXd> transport(Mesh mesh,Data data){
 
 // Solves the laplace equation -Δu(x,y) = f(x,y)
 
-vector<VectorXd> laplace(Mesh mesh,Data data){
+vector<VectorXd> laplace(Mesh &mesh,Data data){
 
     vector<double> bc = data.bcDir;
     vector<int> nId = data.nId;
@@ -64,9 +65,9 @@ vector<VectorXd> laplace(Mesh mesh,Data data){
     // BC and sparse solver
     
     VectorXd b = mesh.vector1D(data.fun);
-    SparseLU<SparseMatrix<double>> solver;
-    SparseMatrix<double> K = mesh.dirichletBC(mesh.matrix2D("K"),nId);
+    SM K = mesh.dirichletBC(mesh.matrix2D("K"),nId);
     for(int i; i<nId.size(); i++){b(nId[i]) = bc[i];}
+    SparseLU<SM> solver;
     solver.compute(K);
 
     // Solves with Euler scheme
@@ -78,7 +79,7 @@ vector<VectorXd> laplace(Mesh mesh,Data data){
 
 // Solves the steady advection-diffusion equation a·∇u(x,y) - kΔu(x,y) = 0
 
-vector<VectorXd> advection(Mesh mesh,Data data){
+vector<VectorXd> advection(Mesh &mesh,Data data){
 
     double k = data.k;
     vector<double> a = data.a;
@@ -88,11 +89,11 @@ vector<VectorXd> advection(Mesh mesh,Data data){
 
     // BC and sparse solver
 
-    SparseLU<SparseMatrix<double>> solver;
-    SparseMatrix<double> K = mesh.matrix2D("K");
-    SparseMatrix<double> Sx = mesh.matrix2D("Sx");
-    SparseMatrix<double> Sy = mesh.matrix2D("Sy");
-    SparseMatrix<double> A = mesh.dirichletBC(a[0]*Sx+a[1]*Sy+k*K,nId);
+    SM K = mesh.matrix2D("K");
+    SM Sx = mesh.matrix2D("Sx");
+    SM Sy = mesh.matrix2D("Sy");
+    SM A = mesh.dirichletBC(a[0]*Sx+a[1]*Sy+k*K,nId);
+    SparseLU<SM> solver;
     solver.compute(A);
 
     VectorXd b = mesh.vector1D(data.fun);
@@ -113,7 +114,7 @@ vector<VectorXd> advection(Mesh mesh,Data data){
 
 // Solves the unsteady diffusion equation du(t,x,y)/dt - kΔu(t,xy) = 0
 
-vector<VectorXd> diffusion(Mesh mesh,Data data){
+vector<VectorXd> diffusion(Mesh &mesh,Data data){
 
     VectorXd u = data.u0;
     vector<int> nId = data.nId;
@@ -123,10 +124,10 @@ vector<VectorXd> diffusion(Mesh mesh,Data data){
 
     // BC and sparse solver
 
-    SparseLU<SparseMatrix<double>> solver;
-    SparseMatrix<double> M = mesh.matrix2D("M");
-    SparseMatrix<double> MK = M-data.k*data.dt*mesh.matrix2D("K");
+    SM M = mesh.matrix2D("M");
+    SM MK = M-data.k*data.dt*mesh.matrix2D("K");
     M = mesh.dirichletBC(M,nId);
+    SparseLU<SM> solver;
     solver.compute(M);
 
     // Solves with Euler scheme

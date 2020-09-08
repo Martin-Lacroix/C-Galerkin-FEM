@@ -7,16 +7,21 @@
 
 using namespace std;
 using namespace Eigen;
+typedef Triplet<double> T;
+typedef SparseMatrix<double> SM;
+
+#include <iostream>
 
 // Triangle or quadrangle 2D element
 
-Element::Element(vector<vector<double>> nXY,int idx){
+Elem::Elem(vector<vector<double>> nXY,int idx){
 
     index = idx;
     type = nXY.size();
     if(type==4){gPts = 9;}
     if(type==3){gPts = 4;}
     MatrixXd rs(gPts,2);
+    MatrixXd xy(type,2);
     w = VectorXd(gPts);
 
     if(type==4){
@@ -42,19 +47,24 @@ Element::Element(vector<vector<double>> nXY,int idx){
         rs.row(3) = Vector2d {0.2,0.2};
     }
 
-    N = MatrixXd(type,gPts);
-    dxN = MatrixXd(type,gPts);
-    dyN = MatrixXd(type,gPts);
-    dxN.setZero();
-    dyN.setZero();
+    for(int i=0; i<type; i++){
+        xy.row(i) = Vector2d::Map(nXY[i].data());
+    }
 
-    MatrixXd drN(type,gPts);
-    MatrixXd dsN(type,gPts);
-    VectorXd J11(gPts);J11.setZero();
-    VectorXd J12(gPts);J12.setZero();
-    VectorXd J21(gPts);J21.setZero();
-    VectorXd J22(gPts);J22.setZero();
+    N = MatrixXd(type,gPts);
+    dxN = {MatrixXd(type,gPts).setZero(),MatrixXd(type,type).setZero()};
+    dyN = {MatrixXd(type,gPts).setZero(),MatrixXd(type,type).setZero()};
+
     VectorXd I(gPts);I.setOnes();
+    vector<MatrixXd> drN = {MatrixXd(type,gPts),MatrixXd(type,type)};
+    vector<MatrixXd> dsN = {MatrixXd(type,gPts),MatrixXd(type,type)};
+    vector<VectorXd> J11 = {VectorXd(gPts).setZero(),VectorXd(type).setZero()};
+    vector<VectorXd> J12 = {VectorXd(gPts).setZero(),VectorXd(type).setZero()};
+    vector<VectorXd> J21 = {VectorXd(gPts).setZero(),VectorXd(type).setZero()};
+    vector<VectorXd> J22 = {VectorXd(gPts).setZero(),VectorXd(type).setZero()};
+
+    VectorXd x = xy.col(0);
+    VectorXd y = xy.col(1);
     VectorXd r = rs.col(0);
     VectorXd s = rs.col(1);
 
@@ -66,8 +76,12 @@ Element::Element(vector<vector<double>> nXY,int idx){
         N.row(3) = (I-r).asDiagonal()*(I+s)/4;
 
         for (int i=0; i<gPts; i++){
-            drN.col(i) = Vector4d {(s(i)-1)/4,(1-s(i))/4,(s(i)+1)/4,-(s(i)+1)/4};
-            dsN.col(i) = Vector4d {(r(i)-1)/4,-(r(i)+1)/4,(r(i)+1)/4,(1-r(i))/4};
+            drN[0].col(i) = Vector4d {(s(i)-1)/4,(1-s(i))/4,(s(i)+1)/4,-(s(i)+1)/4};
+            dsN[0].col(i) = Vector4d {(r(i)-1)/4,-(r(i)+1)/4,(r(i)+1)/4,(1-r(i))/4};
+        }
+        for (int i=0; i<type; i++){
+            drN[1].col(i) = Vector4d {(y(i)-1)/4,(1-y(i))/4,(y(i)+1)/4,-(y(i)+1)/4};
+            dsN[1].col(i) = Vector4d {(x(i)-1)/4,-(x(i)+1)/4,(x(i)+1)/4,(1-x(i))/4};
         }
     }
 
@@ -78,34 +92,39 @@ Element::Element(vector<vector<double>> nXY,int idx){
         N.row(2) = s;
 
         for (int i=0; i<gPts; i++){
-            drN.col(i) = Vector3d {-1,1,0};
-            dsN.col(i) = Vector3d {-1,0,1};
+            drN[0].col(i) = Vector3d {-1,1,0};
+            dsN[0].col(i) = Vector3d {-1,0,1};
+        }
+        for (int i=0; i<type; i++){
+            drN[1].col(i) = Vector3d {-1,1,0};
+            dsN[1].col(i) = Vector3d {-1,0,1};
         }
     }
 
-    MatrixXd coord(type,2);
-    for(int i=0; i<type; i++){coord.row(i) = Vector2d::Map(nXY[i].data());}
-    xy = N.transpose()*coord;
+    for(int k=0; k<2; k++){
+        for(int i=0; i<type; i++){
 
-    for(int i=0; i<type; i++){
-
-        J11 += drN.row(i)*nXY[i][0];
-        J12 += drN.row(i)*nXY[i][1];
-        J21 += dsN.row(i)*nXY[i][0];
-        J22 += dsN.row(i)*nXY[i][1];
+        J11[k] += drN[k].row(i)*x(i);
+        J12[k] += drN[k].row(i)*y(i);
+        J21[k] += dsN[k].row(i)*x(i);
+        J22[k] += dsN[k].row(i)*y(i);
+        }
     }
 
-    detJ = J11.asDiagonal()*J22-J12.asDiagonal()*J21;
-    VectorXd invJ11 = (J22.array().colwise()/detJ.array()).matrix();
-    VectorXd invJ22 = (J11.array().colwise()/detJ.array()).matrix();
-    VectorXd invJ12 = (J12.array().colwise()/detJ.array()).matrix()*(-1);
-    VectorXd invJ21 = (J21.array().colwise()/detJ.array()).matrix()*(-1);
+    for(int k=0; k<2; k++){
 
-    for(int i=0; i<gPts; i++){
-        for(int j=0; j<type; j++){
+        detJ.push_back(J11[k].asDiagonal()*J22[k]-J12[k].asDiagonal()*J21[k]);
+        VectorXd invJ11 = (J22[k].array().colwise()/detJ[k].array()).matrix();
+        VectorXd invJ22 = (J11[k].array().colwise()/detJ[k].array()).matrix();
+        VectorXd invJ12 = (J12[k].array().colwise()/detJ[k].array()).matrix()*(-1);
+        VectorXd invJ21 = (J21[k].array().colwise()/detJ[k].array()).matrix()*(-1);
 
-            dxN(j,i) += drN(j,i)*invJ11(i)+dsN(j,i)*invJ12(i);
-            dyN(j,i) += drN(j,i)*invJ21(i)+dsN(j,i)*invJ22(i);
+        for(int i=0; i<detJ[k].size(); i++){
+            for(int j=0; j<type; j++){
+
+                dxN[k](j,i) += drN[k](j,i)*invJ11(i)+dsN[k](j,i)*invJ12(i);
+                dyN[k](j,i) += drN[k](j,i)*invJ21(i)+dsN[k](j,i)*invJ22(i);
+            }
         }
     }
 }
@@ -145,7 +164,7 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
 
     #pragma omp parallel
     {
-        vector<Element> eListP;
+        vector<Elem> eListP;
         #pragma omp for
 
         for(int i=0; i<eNbr; i++){
@@ -154,29 +173,28 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
             vector<vector<double>> nXY_el;
             if(type==3){nXY_el = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]};}
             if(type==4){nXY_el = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]};}
-            Element elem(nXY_el,i);
+            Elem elem(nXY_el,i);
             eListP.push_back(elem);
         }
         #pragma omp critical
         eList.insert(eList.end(),eListP.begin(),eListP.end());
     }
-    auto compare = [](const Element& x,const Element& y){return x.index<y.index;};
+    auto compare = [](const Elem& x,const Elem& y){return x.index<y.index;};
     sort(eList.begin(),eList.end(),compare);
 }
 
-// Computes the global matrix
+// Computes the global matrix K
 
-SparseMatrix<double> Mesh::matrix2D(double E,double v){
+SM Mesh::matrix2D(double E,double v){
 
-    SparseMatrix<double> Mat(2*nNbr,2*nNbr);
-    typedef Triplet<double> T;
+    SM Mat(2*nNbr,2*nNbr);
     vector<T> triplet;
     Matrix3d D;
 
-    D.row(0) = Vector3d {1-v,v,0};
-    D.row(1) = Vector3d {v,1-v,0};
-    D.row(2) = Vector3d {0,0,(1-2*v)/2};
-    D *= E/((1+v)*(1-2*v));
+    D.row(0) = Vector3d {1,v,0};
+    D.row(1) = Vector3d {v,1,0};
+    D.row(2) = Vector3d {0,0,(1-v)/2};
+    D *= E/(1-v*v);
 
     #pragma omp parallel
     {
@@ -185,7 +203,7 @@ SparseMatrix<double> Mesh::matrix2D(double E,double v){
 
         for(int i=0; i<eNbr; i++){
 
-            Element elem = eList[i];
+            Elem elem = eList[i];
             int type = elem.type;
             MatrixXd A(2*type,2*type);
             MatrixXd B(2*type,3);
@@ -195,11 +213,11 @@ SparseMatrix<double> Mesh::matrix2D(double E,double v){
 
             for(int j=0; j<elem.gPts; j++){
 
-                B(seq(0,type-1),0) = elem.dxN.col(j);
-                B(seq(0,type-1),2) = elem.dyN.col(j);
-                B(seq(type,2*type-1),1) = elem.dyN.col(j);
-                B(seq(type,2*type-1),2) = elem.dxN.col(j);
-                A += elem.w(j)*B*D*B.transpose()*elem.detJ(j);
+                B(seq(0,type-1),0) = elem.dxN[0].col(j);
+                B(seq(0,type-1),2) = elem.dyN[0].col(j);
+                B(seq(type,2*type-1),1) = elem.dyN[0].col(j);
+                B(seq(type,2*type-1),2) = elem.dxN[0].col(j);
+                A += elem.w(j)*B*D*B.transpose()*elem.detJ[0](j);
             }
 
             for(int j=0; j<type; j++){
@@ -243,7 +261,7 @@ vector<Face> Mesh::setFace(vector<vector<int>> fId){
 
 // Apply constant Neumann BC
 
-VectorXd Mesh::neumannBC(vector<Face> fList,vector<Vector2d> bc){
+VectorXd Mesh::neumannBC(vector<Face> &fList,vector<Vector2d> bc){
 
     VectorXd B(2*nNbr);
     B.setZero();
@@ -270,18 +288,19 @@ VectorXd Mesh::neumannBC(vector<Face> fList,vector<Vector2d> bc){
 
 // Prepare the matrix for Dirichlet BC
 
-SparseMatrix<double> Mesh::dirichletBC1(SparseMatrix<double> A,vector<int> nId,int dim){
+SM Mesh::dirichletBC1(SM A,vector<int> nId,int dim){
 
     int d = dim*nNbr;
+    double tol = 1e-16;
     VectorXd I(2*nNbr);
     I.setOnes();
 
     for(int i=0; i<nId.size(); i++){I(nId[i]+d) = 0;}
-    SparseMatrix<double> Ad = I.asDiagonal()*A;
-    Ad = Ad.pruned();
+    SM Ad = I.asDiagonal()*A;
+    Ad = Ad.pruned(1,tol);
 
     for(int i=0; i<nId.size(); i++){Ad.insert(nId[i]+d,nId[i]+d) = 1;}
-    return Ad.pruned();
+    return Ad.pruned(1,tol);
 }
 
 // Prepares the vector for Dirichlet BC
@@ -291,4 +310,74 @@ VectorXd Mesh::dirichletBC2(VectorXd b,vector<int> nId,vector<double> bc,int dim
     int d = dim*nNbr;
     for(int i; i<nId.size(); i++){b(nId[i]+d) = bc[i];}
     return b;
+}
+
+// Evaluates the Jacobian matrix of a function
+
+SM Mesh::jacobian(function<VectorXd(VectorXd)> fun,VectorXd u,double du){
+
+    SM J(2*nNbr,2*nNbr);
+    VectorXd F = fun(u);
+    double tol = 1e-16;
+    vector<T> triplet;
+
+    #pragma omp parallel
+    {
+        VectorXd col;
+        vector<T> trip;
+        VectorXd uTemp = u;
+        #pragma omp for
+
+        for(int j=0; j<2*nNbr; j++){
+
+            uTemp[j] += du;
+            col = (fun(uTemp)-F)/du;
+            uTemp[j] = u[j];
+
+            for(int i=0; i<2*nNbr; i++){
+                if(abs(col(i))>tol){trip.push_back(T(i,j,col(i)));}
+            }
+        }
+        #pragma omp critical
+        triplet.insert(triplet.end(),trip.begin(),trip.end());
+    }
+    J.setFromTriplets(triplet.begin(),triplet.end());
+    return J;
+}
+
+// Computes the strain field
+
+VectorXd Mesh::strain(VectorXd u){
+
+    VectorXd du(3*nNbr);
+    du.setZero();
+
+    for(int i=0; i<eNbr; i++){
+
+        Elem elem = eList[i];
+        int type = elem.type;
+        MatrixXd B(2*type,3);
+        VectorXd uEl(2*type);
+        B.setZero();
+
+        for(int j=0; j<type; j++){
+
+            uEl(j) = u(eId[i][j]);
+            uEl(j+type) = u(eId[i][j]+nNbr);
+        }
+
+        for(int j=0; j<type; j++){
+
+            B(seq(0,type-1),0) = elem.dxN[1].col(j);
+            B(seq(0,type-1),2) = elem.dyN[1].col(j);
+            B(seq(type,2*type-1),1) = elem.dyN[1].col(j);
+            B(seq(type,2*type-1),2) = elem.dxN[1].col(j);
+
+            Vector3d duEl = B.transpose()*uEl;
+            du(eId[i][j]+2*nNbr) = duEl(2);
+            du(eId[i][j]+nNbr) = duEl(1);
+            du(eId[i][j]) = duEl(0);
+        }
+    }
+    return du;
 }
