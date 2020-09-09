@@ -77,7 +77,7 @@ vector<VectorXd> newton(Mesh &mesh,Data data){
     VectorXd r(2*mesh.nNbr);
     u.setZero();
 
-    auto force = [K,B](VectorXd u){return K*u-B;};
+    auto force = [K,B](VectorXd u){return K*u;};
     SM J = mesh.jacobian(force,u,data.du);
     solver.compute(J);
 
