@@ -61,7 +61,7 @@ if u.shape[1]==nNbr:
         plt.close()
     k += 1
     
-    # %% Builds the vector field
+# %% Builds the vector field
 
 if u.shape[1]>nNbr:
 
