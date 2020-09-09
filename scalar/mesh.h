@@ -47,7 +47,6 @@ class Mesh{
     public:
 
     Mesh(vector<vector<double>> nXY,vector<vector<int>> eId);
-
     VectorXd neumannBC2(vector<Face> &fList,vector<VectorXd> F);
     VectorXd neumannBC1(vector<Face> &fList,vector<double> bc);
     VectorXd vector1D(function<VectorXd(MatrixXd)> fun);

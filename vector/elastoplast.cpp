@@ -66,7 +66,7 @@ Param meshParam(int type,int size,double xyMax){
 
 int main(){
 
-    int type = 4;
+    int type = 3;
     int size = 50;
     double xyMax = 4;
 
@@ -76,7 +76,10 @@ int main(){
 
     Data data;
     data.E = 2;
-    data.v = 1.0/3;
+    data.Et = 1;
+    data.v = 0.3;
+    data.ys = 0.24;
+    data.step = 10;
     data.bcNeu = bcNeu;
     data.fId = param.fId;
     data.nIdx = param.nIdx;
@@ -88,24 +91,22 @@ int main(){
 
     Mesh mesh(param.nXY,param.eId);
     cout << "\nMesh: done" << endl;
-    vector<VectorXd> ue = elasticity(mesh,data);
+    VectorXd u = newton(mesh,data);
     cout << "Solver: done" << endl;
 
     // Writes the file
 
     mkdir("../output");
     ofstream nXY("../output/nXY.txt");
-    ofstream disp("../output/disp.txt");
+    ofstream solution("../output/solution.txt");
     ofstream strain("../output/strain.txt");
 
     for (int i=0; i<mesh.nXY.size(); i++){
         nXY << mesh.nXY[i][0] << "," << mesh.nXY[i][1] << "\n";
     }
 
-    for (int j=0; j<ue[1].size()-1; j++){strain << ue[1][j] << ",";}
-    for (int j=0; j<ue[0].size()-1; j++){disp << ue[0][j] << ",";}
-    strain << ue[1][ue[1].size()-1] << "\n";
-    disp << ue[0][ue[0].size()-1] << "\n";
+    for (int j=0; j<u.size()-1; j++){solution << u[j] << ",";}
+    solution << u[u.size()-1] << "\n";
     cout << "Writing: done\n" << endl;
     return 0;
 }

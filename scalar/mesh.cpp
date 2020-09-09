@@ -153,10 +153,10 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
         for(int i=0; i<eNbr; i++){
             
             int type = eId[i].size();
-            vector<vector<double>> nXY_el;
-            if(type==3){nXY_el = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]};}
-            if(type==4){nXY_el = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]};}
-            Elem elem(nXY_el,i);
+            vector<vector<double>> nXYp;
+            if(type==3){nXYp = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]};}
+            if(type==4){nXYp = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]};}
+            Elem elem(nXYp,i);
             eListP.push_back(elem);
         }
         #pragma omp critical

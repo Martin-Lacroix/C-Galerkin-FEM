@@ -4,11 +4,11 @@ Finite element code developped for **Academic Purpose** (and thus not optimized)
 
 ## Use
 
-First, make sure that the Eigen library is installed and that your GCC supports OpenMP. Then move to one of the code folders and compile the project by providing the path to Eigen to the compiler. Some scripts such as transport.cpp or elasticity.cpp are provided as example.
+First, make sure that the Eigen library is installed and that your GCC supports OpenMP. Then move to one of the code folders and compile the project by providing the path to Eigen to the compiler. Some scripts such as transport.cpp or elastoplast.cpp are provided as example.
 ```css
 g++ -O2 -fopenmp -I path-to-Eigen\Eigen example.cpp mesh.cpp -o example.exe
 ```
-You may run the executable and visualize the solution with plot1.py or plot2.py. Note that the nodes of an element and the domain borders must be assigned counterclockwise.
+You may run the executable and visualize the solution with plot.py. Note that the nodes of an element and the domain borders must be assigned counterclockwise as the face normals are oriented to the right.
 ```css
 .\example.exe
 python plot.py

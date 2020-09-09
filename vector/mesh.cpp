@@ -127,6 +127,28 @@ Elem::Elem(vector<vector<double>> nXY,int idx){
     }
 }
 
+// Average elastic Von Mises stress
+
+double Elem::vonMises(VectorXd u,Matrix3d D){
+
+    Vector3d sigma;
+    MatrixXd B(2*type,3);
+    sigma.setZero();
+    B.setZero();
+
+    for(int j=0; j<type; j++){
+
+        B(seq(0,type-1),0) = dxN[1].col(j);
+        B(seq(0,type-1),2) = dyN[1].col(j);
+        B(seq(type,2*type-1),1) = dyN[1].col(j);
+        B(seq(type,2*type-1),2) = dxN[1].col(j);
+        sigma += D*B.transpose()*u/type;
+    }
+
+    double sVM = sqrt(sigma.transpose()*sigma+2*sigma[2]-sigma[0]*sigma[1]);
+    return sVM;
+}
+
 // Face 1D element
 
 Face::Face(vector<vector<double>> nXY,vector<int> fId_in,int idx){
@@ -159,6 +181,7 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
     eId = eId_in;
     nNbr = nXY.size();
     eNbr = eId.size();
+    plastic = vector<int>(eNbr,0);
 
     #pragma omp parallel
     {
@@ -168,10 +191,10 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
         for(int i=0; i<eNbr; i++){
             
             int type = eId[i].size();
-            vector<vector<double>> nXY_el;
-            if(type==3){nXY_el = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]};}
-            if(type==4){nXY_el = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]};}
-            Elem elem(nXY_el,i);
+            vector<vector<double>> nXYp;
+            if(type==3){nXYp = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]};}
+            if(type==4){nXYp = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]};}
+            Elem elem(nXYp,i);
             eListP.push_back(elem);
         }
         #pragma omp critical
@@ -183,16 +206,11 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
 
 // Computes the global matrix K
 
-SM Mesh::matrix2D(double E,double v){
+SM Mesh::matrix2D(Matrix3d De,Matrix3d Dp,VectorXd &u,double ys){
 
     SM Mat(2*nNbr,2*nNbr);
     vector<T> triplet;
     Matrix3d D;
-
-    D.row(0) = Vector3d {1,v,0};
-    D.row(1) = Vector3d {v,1,0};
-    D.row(2) = Vector3d {0,0,(1-v)/2};
-    D *= E/(1-v*v);
 
     #pragma omp parallel
     {
@@ -203,11 +221,22 @@ SM Mesh::matrix2D(double E,double v){
 
             Elem elem = eList[i];
             int type = elem.type;
-            MatrixXd A(2*type,2*type);
+            VectorXd up(2*type);
             MatrixXd B(2*type,3);
+            MatrixXd A(2*type,2*type);
 
             A.setZero();
             B.setZero();
+
+            for(int j=0; j<type; j++){
+
+                up(j) = u(eId[i][j]);
+                up(j+type) = u(eId[i][j]+nNbr);
+            }
+
+            if(elem.vonMises(up,De)>ys){plastic[i] = 1;}
+            if(plastic[i]==1){D = Dp;}
+            else{D = De;}
 
             for(int j=0; j<elem.gPts; j++){
 
@@ -310,72 +339,28 @@ VectorXd Mesh::dirichletBC2(VectorXd b,vector<int> nId,vector<double> bc,int dim
     return b;
 }
 
-// Evaluates the Jacobian matrix of a function
+// Updates the position of the nodes
 
-SM Mesh::jacobian(function<VectorXd(VectorXd)> fun,VectorXd u,double du){
+void Mesh::update(VectorXd &u){
 
-    SM J(2*nNbr,2*nNbr);
-    VectorXd F = fun(u);
-    double tol = 1e-16;
-    vector<T> triplet;
+    for(int i=0; i<nNbr; i++){
+
+        nXY[i][0] += u[i];
+        nXY[i][1] += u[i+nNbr];
+    }
 
     #pragma omp parallel
     {
-        VectorXd col;
-        vector<T> trip;
-        VectorXd uTemp = u;
         #pragma omp for
-
-        for(int j=0; j<2*nNbr; j++){
-
-            uTemp[j] += du;
-            col = (fun(uTemp)-F)/du;
-            uTemp[j] = u[j];
-
-            for(int i=0; i<2*nNbr; i++){
-                if(abs(col(i))>tol){trip.push_back(T(i,j,col(i)));}
-            }
-        }
-        #pragma omp critical
-        triplet.insert(triplet.end(),trip.begin(),trip.end());
-    }
-    J.setFromTriplets(triplet.begin(),triplet.end());
-    return J;
-}
-
-// Computes the strain field
-
-VectorXd Mesh::strain(VectorXd u){
-
-    VectorXd du(3*nNbr);
-    du.setZero();
-
-    for(int i=0; i<eNbr; i++){
-
-        Elem elem = eList[i];
-        int type = elem.type;
-        MatrixXd B(2*type,3);
-        VectorXd uEl(2*type);
-        B.setZero();
-
-        for(int j=0; j<type; j++){
-
-            uEl(j) = u(eId[i][j]);
-            uEl(j+type) = u(eId[i][j]+nNbr);
-        }
-
-        for(int j=0; j<type; j++){
-
-            B(seq(0,type-1),0) = elem.dxN[1].col(j);
-            B(seq(0,type-1),2) = elem.dyN[1].col(j);
-            B(seq(type,2*type-1),1) = elem.dyN[1].col(j);
-            B(seq(type,2*type-1),2) = elem.dxN[1].col(j);
-
-            Vector3d duEl = B.transpose()*uEl;
-            du(eId[i][j]+2*nNbr) = duEl(2);
-            du(eId[i][j]+nNbr) = duEl(1);
-            du(eId[i][j]) = duEl(0);
+        for(int i=0; i<eNbr; i++){
+            
+            int type = eId[i].size();
+            vector<vector<double>> nXYp;
+            if(type==3){nXYp = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]]};}
+            if(type==4){nXYp = {nXY[eId[i][0]],nXY[eId[i][1]],nXY[eId[i][2]],nXY[eId[i][3]]};}
+            Elem elem(nXYp,i);
+            eList[i] = elem;
         }
     }
-    return du;
+    return;
 }
