@@ -57,7 +57,6 @@ class Mesh{
     void update(VectorXd &u);
 
     vector<Elem> eList;
-    vector<int> plastic;
     vector<vector<int>> eId;
     vector<vector<double>> nXY;
 

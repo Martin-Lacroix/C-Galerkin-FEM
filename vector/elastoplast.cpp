@@ -66,7 +66,7 @@ Param meshParam(int type,int size,double xyMax){
 
 int main(){
 
-    int type = 3;
+    int type = 4;
     int size = 50;
     double xyMax = 4;
 

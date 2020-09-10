@@ -181,7 +181,6 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
     eId = eId_in;
     nNbr = nXY.size();
     eNbr = eId.size();
-    plastic = vector<int>(eNbr,0);
 
     #pragma omp parallel
     {
@@ -234,8 +233,7 @@ SM Mesh::matrix2D(Matrix3d De,Matrix3d Dp,VectorXd &u,double ys){
                 up(j+type) = u(eId[i][j]+nNbr);
             }
 
-            if(elem.vonMises(up,De)>ys){plastic[i] = 1;}
-            if(plastic[i]==1){D = Dp;}
+            if(elem.vonMises(up,De)>ys){D = Dp;}
             else{D = De;}
 
             for(int j=0; j<elem.gPts; j++){
