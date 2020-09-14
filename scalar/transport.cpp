@@ -9,6 +9,9 @@
 using namespace std;
 using namespace Eigen;
 
+// Compilation with the terminal
+// g++ -O2 -fopenmp -I path-to-Eigen\Eigen transport.cpp mesh.cpp -o transport.exe
+
 struct Param{
 
     vector<vector<double>> nXY;
