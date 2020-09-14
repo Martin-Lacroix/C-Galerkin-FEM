@@ -9,6 +9,9 @@
 using namespace std;
 using namespace Eigen;
 
+// Compilation with the terminal
+// g++ -O2 -fopenmp -I path-to-Eigen\Eigen advection.cpp mesh.cpp -o advection.exe
+
 struct Param{
 
     vector<vector<double>> nXY;
