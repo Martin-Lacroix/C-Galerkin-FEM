@@ -62,7 +62,7 @@ Param meshParam(int type,int size,double xyMax){
     return param;
 }
 
-// Solves a static linear elsaticity equation ∇·σ(u) = 0
+// Solves in small strain linear elsaticity ∇·σ(u) = 0
 
 int main(){
 
