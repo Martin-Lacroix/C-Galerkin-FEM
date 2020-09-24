@@ -14,8 +14,7 @@ struct Param{
     vector<vector<double>> nXY;
     vector<vector<int>> eId;
     vector<vector<int>> fId;
-    vector<int> nIdx;
-    vector<int> nIdy;
+    vector<int> nId;
 };
 
 Param meshParam(int type,int size,double xyMax){
@@ -24,8 +23,7 @@ Param meshParam(int type,int size,double xyMax){
     Param param;
     vector<int> idx;
     int node = size+1;
-    vector<int> nIdx(node);
-    vector<int> nIdy(node);
+    vector<int> nId(node);
     vector<vector<int>> eId;
     vector<vector<int>> fId(size,vector<int>(2));
     vector<vector<double>> nXY(node*node,vector<double>(2));
@@ -50,15 +48,13 @@ Param meshParam(int type,int size,double xyMax){
 
     // Boundary face indices
 
-    for(int i=0; i<node; i++){nIdy[i] = i;}
-    for(int i=0; i<node; i++){nIdx[i] = i*node;}
+    for(int i=0; i<node; i++){nId[i] = i*node;}
     for(int i=0; i<size; i++){fId[i] = {(i+1)*node-1,(i+2)*node-1};}
 
     param.nXY = nXY;
     param.eId = eId;
     param.fId = fId;
-    param.nIdx = nIdx;
-    param.nIdy = nIdy;
+    param.nId = nId;
     return param;
 }
 
@@ -68,24 +64,24 @@ int main(){
 
     int type = 4;
     int size = 50;
-    double xyMax = 4;
+    double xyMax = 1;
 
     Param param = meshParam(type,size,xyMax);
     vector<Vector2d> bcNeu(param.fId.size());
-    for(int i=0; i<param.fId.size(); i++){bcNeu[i] = Vector2d {0.5,0};}
+    for(int i=0; i<param.fId.size(); i++){bcNeu[i] = Vector2d {0,0.1};}
 
     Data data;
     data.E = 2;
     data.Et = 1;
     data.v = 0.3;
-    data.ys = 0.24;
-    data.step = 10;
+    data.ys = 10;
+    data.step = 100;
     data.bcNeu = bcNeu;
     data.fId = param.fId;
-    data.nIdx = param.nIdx;
-    data.nIdy = param.nIdy;
-    data.bcDirX = vector<double> (param.nIdx.size(),0);
-    data.bcDirY = vector<double> (param.nIdy.size(),0);
+    data.nIdx = param.nId;
+    data.nIdy = param.nId;
+    data.bcDirX = vector<double> (param.nId.size(),0);
+    data.bcDirY = vector<double> (param.nId.size(),0);
 
     // Mesh and solver
 

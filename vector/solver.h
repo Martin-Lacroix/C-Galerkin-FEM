@@ -28,10 +28,10 @@ struct Data{
 Matrix3d stiffness(double E,double v){
 
     Matrix3d D;
-    D.row(0) = Vector3d {1,v,0};
-    D.row(1) = Vector3d {v,1,0};
-    D.row(2) = Vector3d {0,0,(1-v)/2};
-    D *= E/(1-v*v);
+    D.row(0) = Vector3d {1-v,v,0};
+    D.row(1) = Vector3d {v,1-v,0};
+    D.row(2) = Vector3d {0,0,(1-2*v)/2};
+    D *= E/((1+v)*(1-2*v));
 
     return D;
 }
@@ -42,24 +42,27 @@ VectorXd newton(Mesh &mesh,Data data){
 
     vector<int> nIdx = data.nIdx;
     vector<int> nIdy = data.nIdy;
-    Matrix3d Dp = stiffness(data.Et,0.5);
+    Matrix3d Dp = stiffness(data.Et,0.45);
     Matrix3d De = stiffness(data.E,data.v);
 
     // BC and sparse solver
-
-    vector<Face> face = mesh.setFace(data.fId);
-    VectorXd B = mesh.neumannBC(face,data.bcNeu);
-    B = mesh.dirichletBC2(B,nIdx,data.bcDirX,0);
-    B = mesh.dirichletBC2(B,nIdy,data.bcDirY,1);
+    
+    vector<Vector2d> bcNeu = data.bcNeu;
+    vector<Vector2d> dBC(bcNeu.size());
+    for(int i=0; i<bcNeu.size(); i++){dBC[i] = bcNeu[i]/data.step;}
 
     // Solves with Newton-Raphson
 
-    VectorXd dB = B/data.step;
     VectorXd u(2*mesh.nNbr);
     SparseLU<SM> solver;
     u.setZero();
 
-       for(int i=0; i<data.step; i++){
+       for(int i=0; i<data.step+1; i++){
+
+        vector<Face> face = mesh.setFace(data.fId);
+        VectorXd dB = mesh.neumannBC(face,dBC);
+        dB = mesh.dirichletBC2(dB,nIdx,data.bcDirX,0);
+        dB = mesh.dirichletBC2(dB,nIdy,data.bcDirY,1);
 
         SM K = mesh.matrix2D(De,Dp,u,data.ys);
         K = mesh.dirichletBC1(K,nIdx,0);
@@ -67,7 +70,7 @@ VectorXd newton(Mesh &mesh,Data data){
 
         solver.compute(K);
         VectorXd du = solver.solve(dB);
-        //mesh.update(du);
+        mesh.update(du);
         u += du;
     }
     return u;
