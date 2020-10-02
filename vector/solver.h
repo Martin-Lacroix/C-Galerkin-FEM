@@ -13,8 +13,6 @@ struct Data{
     int step;
     double E;
     double v;
-    double Et;
-    double ys;
     vector<int> nIdx;
     vector<int> nIdy;
     vector<Vector2d> bcNeu;
@@ -36,14 +34,13 @@ Matrix3d stiffness(double E,double v){
     return D;
 }
 
-// Solves the equation of motion ∇·σ(u) = 0 in linear elasto-plasticity
+// Solves the equation of motion ∇·σ(u) = 0 in linear elasticity
 
 VectorXd newton(Mesh &mesh,Data data){
 
     vector<int> nIdx = data.nIdx;
     vector<int> nIdy = data.nIdy;
-    Matrix3d Dp = stiffness(data.Et,0.45);
-    Matrix3d De = stiffness(data.E,data.v);
+    Matrix3d D = stiffness(data.E,data.v);
 
     // BC and sparse solver
     
@@ -64,7 +61,7 @@ VectorXd newton(Mesh &mesh,Data data){
         dB = mesh.dirichletBC2(dB,nIdx,data.bcDirX,0);
         dB = mesh.dirichletBC2(dB,nIdy,data.bcDirY,1);
 
-        SM K = mesh.matrix2D(De,Dp,u,data.ys);
+        SM K = mesh.matrix2D(D);
         K = mesh.dirichletBC1(K,nIdx,0);
         K = mesh.dirichletBC1(K,nIdy,1);
 

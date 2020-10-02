@@ -72,9 +72,7 @@ int main(){
 
     Data data;
     data.E = 2;
-    data.Et = 1;
     data.v = 0.3;
-    data.ys = 10;
     data.step = 100;
     data.bcNeu = bcNeu;
     data.fId = param.fId;

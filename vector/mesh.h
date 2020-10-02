@@ -50,11 +50,10 @@ class Mesh{
     VectorXd dirichletBC2(VectorXd b,vector<int> nId,vector<double> bc,int dim);
     SM jacobian(function<VectorXd(VectorXd)> fun,VectorXd &u,double dx);
     VectorXd neumannBC(vector<Face> &fList,vector<Vector2d> bc);
-    SM matrix2D(Matrix3d De,Matrix3d Dp,VectorXd &u,double ys);
     vector<Face> setFace(vector<vector<int>> fId);
     SM dirichletBC1(SM A,vector<int> nId,int dim);
-    VectorXd strain(VectorXd u);
     void update(VectorXd &u);
+    SM matrix2D(Matrix3d D);
 
     vector<Elem> eList;
     vector<vector<int>> eId;

@@ -127,28 +127,6 @@ Elem::Elem(vector<vector<double>> nXY,int idx){
     }
 }
 
-// Average elastic Von Mises stress
-
-double Elem::vonMises(VectorXd u,Matrix3d D){
-
-    Vector3d sigma;
-    MatrixXd B(2*type,3);
-    sigma.setZero();
-    B.setZero();
-
-    for(int j=0; j<type; j++){
-
-        B(seq(0,type-1),0) = dxN[1].col(j);
-        B(seq(0,type-1),2) = dyN[1].col(j);
-        B(seq(type,2*type-1),1) = dyN[1].col(j);
-        B(seq(type,2*type-1),2) = dxN[1].col(j);
-        sigma += D*B.transpose()*u/type;
-    }
-
-    double sVM = sqrt(sigma.transpose()*sigma+2*sigma[2]-sigma[0]*sigma[1]);
-    return sVM;
-}
-
 // Face 1D element
 
 Face::Face(vector<vector<double>> nXY,vector<int> fId_in,int idx){
@@ -205,11 +183,10 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
 
 // Computes the global matrix K
 
-SM Mesh::matrix2D(Matrix3d De,Matrix3d Dp,VectorXd &u,double ys){
+SM Mesh::matrix2D(Matrix3d D){
 
     SM Mat(2*nNbr,2*nNbr);
     vector<T> triplet;
-    Matrix3d D;
 
     #pragma omp parallel
     {
@@ -220,21 +197,11 @@ SM Mesh::matrix2D(Matrix3d De,Matrix3d Dp,VectorXd &u,double ys){
 
             Elem elem = eList[i];
             int type = elem.type;
-            VectorXd up(2*type);
             MatrixXd B(2*type,3);
             MatrixXd A(2*type,2*type);
 
             A.setZero();
             B.setZero();
-
-            for(int j=0; j<type; j++){
-
-                up(j) = u(eId[i][j]);
-                up(j+type) = u(eId[i][j]+nNbr);
-            }
-
-            if(elem.vonMises(up,De)>ys){D = Dp;}
-            else{D = De;}
 
             for(int j=0; j<elem.gPts; j++){
 
