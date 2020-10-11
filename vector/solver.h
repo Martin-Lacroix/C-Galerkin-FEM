@@ -36,7 +36,7 @@ Matrix3d stiffness(double E,double v){
 
 // Solves the equation of motion ∇·σ(u) = 0 in linear elasticity
 
-VectorXd newton(Mesh &mesh,Data data){
+VectorXd solve(Mesh &mesh,Data data){
 
     vector<int> nIdx = data.nIdx;
     vector<int> nIdy = data.nIdy;
