@@ -48,7 +48,7 @@ VectorXd newton(Mesh &mesh,Data data){
     vector<Vector2d> dBC(bcNeu.size());
     for(int i=0; i<bcNeu.size(); i++){dBC[i] = bcNeu[i]/data.step;}
 
-    // Solves with Newton-Raphson
+    // Updated Lagrangian solver
 
     VectorXd u(2*mesh.nNbr);
     SparseLU<SM> solver;
