@@ -85,7 +85,7 @@ int main(){
 
     Mesh mesh(param.nXY,param.eId);
     cout << "\nMesh: done" << endl;
-    VectorXd u = newton(mesh,data);
+    VectorXd u = solve(mesh,data);
     cout << "Solver: done" << endl;
 
     // Writes the file
