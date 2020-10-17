@@ -14,7 +14,6 @@ class Elem{
     public:
 
     Elem(vector<vector<double>> nXY,int idx);
-    double vonMises(VectorXd u,Matrix3d D);
 
     int type;
     int gPts;
