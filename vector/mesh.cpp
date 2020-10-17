@@ -61,8 +61,6 @@ Elem::Elem(vector<vector<double>> nXY,int idx){
     VectorXd J21 = VectorXd(gPts).setZero();
     VectorXd J22 = VectorXd(gPts).setZero();
 
-    VectorXd x = xy.col(0);
-    VectorXd y = xy.col(1);
     VectorXd r = rs.col(0);
     VectorXd s = rs.col(1);
 
