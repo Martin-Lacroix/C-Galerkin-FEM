@@ -49,17 +49,17 @@ Elem::Elem(vector<vector<double>> nXY,int idx){
         xy.row(i) = Vector2d::Map(nXY[i].data());
     }
 
-    N = MatrixXd(type,gPts);
-    dxN = {MatrixXd(type,gPts).setZero(),MatrixXd(type,type).setZero()};
-    dyN = {MatrixXd(type,gPts).setZero(),MatrixXd(type,type).setZero()};
+    N = MatrixXd(type,gPts).setZero();
+    dxN = MatrixXd(type,gPts).setZero();
+    dyN = MatrixXd(type,gPts).setZero();
 
     VectorXd I(gPts);I.setOnes();
-    vector<MatrixXd> drN = {MatrixXd(type,gPts),MatrixXd(type,type)};
-    vector<MatrixXd> dsN = {MatrixXd(type,gPts),MatrixXd(type,type)};
-    vector<VectorXd> J11 = {VectorXd(gPts).setZero(),VectorXd(type).setZero()};
-    vector<VectorXd> J12 = {VectorXd(gPts).setZero(),VectorXd(type).setZero()};
-    vector<VectorXd> J21 = {VectorXd(gPts).setZero(),VectorXd(type).setZero()};
-    vector<VectorXd> J22 = {VectorXd(gPts).setZero(),VectorXd(type).setZero()};
+    MatrixXd drN = MatrixXd(type,gPts);
+    MatrixXd dsN = MatrixXd(type,gPts);
+    VectorXd J11 = VectorXd(gPts).setZero();
+    VectorXd J12 = VectorXd(gPts).setZero();
+    VectorXd J21 = VectorXd(gPts).setZero();
+    VectorXd J22 = VectorXd(gPts).setZero();
 
     VectorXd x = xy.col(0);
     VectorXd y = xy.col(1);
@@ -74,12 +74,8 @@ Elem::Elem(vector<vector<double>> nXY,int idx){
         N.row(3) = (I-r).asDiagonal()*(I+s)/4;
 
         for (int i=0; i<gPts; i++){
-            drN[0].col(i) = Vector4d {(s(i)-1)/4,(1-s(i))/4,(s(i)+1)/4,-(s(i)+1)/4};
-            dsN[0].col(i) = Vector4d {(r(i)-1)/4,-(r(i)+1)/4,(r(i)+1)/4,(1-r(i))/4};
-        }
-        for (int i=0; i<type; i++){
-            drN[1].col(i) = Vector4d {(y(i)-1)/4,(1-y(i))/4,(y(i)+1)/4,-(y(i)+1)/4};
-            dsN[1].col(i) = Vector4d {(x(i)-1)/4,-(x(i)+1)/4,(x(i)+1)/4,(1-x(i))/4};
+            drN.col(i) = Vector4d {(s(i)-1)/4,(1-s(i))/4,(s(i)+1)/4,-(s(i)+1)/4};
+            dsN.col(i) = Vector4d {(r(i)-1)/4,-(r(i)+1)/4,(r(i)+1)/4,(1-r(i))/4};
         }
     }
 
@@ -90,39 +86,30 @@ Elem::Elem(vector<vector<double>> nXY,int idx){
         N.row(2) = s;
 
         for (int i=0; i<gPts; i++){
-            drN[0].col(i) = Vector3d {-1,1,0};
-            dsN[0].col(i) = Vector3d {-1,0,1};
-        }
-        for (int i=0; i<type; i++){
-            drN[1].col(i) = Vector3d {-1,1,0};
-            dsN[1].col(i) = Vector3d {-1,0,1};
+            drN.col(i) = Vector3d {-1,1,0};
+            dsN.col(i) = Vector3d {-1,0,1};
         }
     }
 
-    for(int k=0; k<2; k++){
-        for(int i=0; i<type; i++){
+    for(int i=0; i<type; i++){
 
-        J11[k] += drN[k].row(i)*x(i);
-        J12[k] += drN[k].row(i)*y(i);
-        J21[k] += dsN[k].row(i)*x(i);
-        J22[k] += dsN[k].row(i)*y(i);
-        }
+        J11 += drN.row(i)*x(i);
+        J12 += drN.row(i)*y(i);
+        J21 += dsN.row(i)*x(i);
+        J22 += dsN.row(i)*y(i);
     }
 
-    for(int k=0; k<2; k++){
+    detJ = J11.asDiagonal()*J22-J12.asDiagonal()*J21;
+    VectorXd invJ11 = (J22.array().colwise()/detJ.array()).matrix();
+    VectorXd invJ22 = (J11.array().colwise()/detJ.array()).matrix();
+    VectorXd invJ12 = (J12.array().colwise()/detJ.array()).matrix()*(-1);
+    VectorXd invJ21 = (J21.array().colwise()/detJ.array()).matrix()*(-1);
 
-        detJ.push_back(J11[k].asDiagonal()*J22[k]-J12[k].asDiagonal()*J21[k]);
-        VectorXd invJ11 = (J22[k].array().colwise()/detJ[k].array()).matrix();
-        VectorXd invJ22 = (J11[k].array().colwise()/detJ[k].array()).matrix();
-        VectorXd invJ12 = (J12[k].array().colwise()/detJ[k].array()).matrix()*(-1);
-        VectorXd invJ21 = (J21[k].array().colwise()/detJ[k].array()).matrix()*(-1);
+    for(int i=0; i<gPts; i++){
+        for(int j=0; j<type; j++){
 
-        for(int i=0; i<detJ[k].size(); i++){
-            for(int j=0; j<type; j++){
-
-                dxN[k](j,i) += drN[k](j,i)*invJ11(i)+dsN[k](j,i)*invJ12(i);
-                dyN[k](j,i) += drN[k](j,i)*invJ21(i)+dsN[k](j,i)*invJ22(i);
-            }
+            dxN(j,i) += drN(j,i)*invJ11(i)+dsN(j,i)*invJ12(i);
+            dyN(j,i) += drN(j,i)*invJ21(i)+dsN(j,i)*invJ22(i);
         }
     }
 }
@@ -178,7 +165,7 @@ Mesh::Mesh(vector<vector<double>> nXY_in,vector<vector<int>> eId_in){
         eList.insert(eList.end(),eListP.begin(),eListP.end());
     }
     auto compare = [](const Elem& x,const Elem& y){return x.index<y.index;};
-    sort(eList.begin(),eList.end(),compare);
+    std::sort(eList.begin(),eList.end(),compare);
 }
 
 // Computes the global matrix K
@@ -205,11 +192,11 @@ SM Mesh::matrix2D(Matrix3d D){
 
             for(int j=0; j<elem.gPts; j++){
 
-                B(seq(0,type-1),0) = elem.dxN[0].col(j);
-                B(seq(0,type-1),2) = elem.dyN[0].col(j);
-                B(seq(type,2*type-1),1) = elem.dyN[0].col(j);
-                B(seq(type,2*type-1),2) = elem.dxN[0].col(j);
-                A += elem.w(j)*B*D*B.transpose()*elem.detJ[0](j);
+                B(seq(0,type-1),0) = elem.dxN.col(j);
+                B(seq(0,type-1),2) = elem.dyN.col(j);
+                B(seq(type,2*type-1),1) = elem.dyN.col(j);
+                B(seq(type,2*type-1),2) = elem.dxN.col(j);
+                A += elem.w(j)*B*D*B.transpose()*elem.detJ(j);
             }
 
             for(int j=0; j<type; j++){
@@ -247,7 +234,7 @@ vector<Face> Mesh::setFace(vector<vector<int>> fId){
         fList.insert(fList.end(),fListP.begin(),fListP.end());
     }
     auto compare = [](const Face& x,const Face& y){return x.index<y.index;};
-    sort(fList.begin(),fList.end(),compare);
+    std::sort(fList.begin(),fList.end(),compare);
     return fList;
 }
 

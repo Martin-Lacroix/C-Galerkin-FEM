@@ -19,9 +19,9 @@ class Elem{
     int gPts;
     int index;
 
-    vector<VectorXd> detJ;
-    vector<MatrixXd> dxN;
-    vector<MatrixXd> dyN;
+    VectorXd detJ;
+    MatrixXd dxN;
+    MatrixXd dyN;
     MatrixXd N;
     VectorXd w;
 };
