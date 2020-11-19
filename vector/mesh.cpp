@@ -91,10 +91,10 @@ Elem::Elem(vector<vector<double>> nXY,int idx){
 
     for(int i=0; i<type; i++){
 
-        J11 += drN.row(i)*x(i);
-        J12 += drN.row(i)*y(i);
-        J21 += dsN.row(i)*x(i);
-        J22 += dsN.row(i)*y(i);
+        J11 += drN.row(i)*nXY[i][0];
+        J12 += drN.row(i)*nXY[i][1];
+        J21 += dsN.row(i)*nXY[i][0];
+        J22 += dsN.row(i)*nXY[i][1];
     }
 
     detJ = J11.asDiagonal()*J22-J12.asDiagonal()*J21;

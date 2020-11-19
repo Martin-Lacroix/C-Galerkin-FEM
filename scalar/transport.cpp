@@ -101,9 +101,9 @@ int main(){
 
     // Writes the file
 
-    mkdir("../output");
-    ofstream solution("../output/solution.txt");
-    ofstream nXY("../output/nXY.txt");
+    mkdir("output");
+    ofstream solution("output/solution.txt");
+    ofstream nXY("output/nXY.txt");
 
     for (int i=0; i<mesh.nXY.size(); i++){
         nXY << mesh.nXY[i][0] << "," << mesh.nXY[i][1] << "\n";

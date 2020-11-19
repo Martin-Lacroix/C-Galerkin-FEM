@@ -42,7 +42,7 @@ if u.shape[1]==nNbr:
         ax = fig.gca(projection='3d')
         ax.set_xlabel('$x$',labelpad=20)
         ax.set_ylabel('$y$',labelpad=15)
-        ax.set_zlabel('$u\,(x,y)$',labelpad=10)
+        ax.set_zlabel('$u(x,y)$',labelpad=10)
         ax.xaxis.set_major_locator(plt.MaxNLocator(5))
         ax.yaxis.set_major_locator(plt.MaxNLocator(6))
         ax.zaxis.set_major_locator(plt.MaxNLocator(4))
@@ -72,7 +72,7 @@ if u.shape[1]>nNbr:
     
     plt.figure(figsize=(5.5,4))
     plt.scatter(nXY[:,0],nXY[:,1],c=u1,cmap=cmap,marker=mk)
-    plt.colorbar(label='$u\,_1\,(x,y)$')
+    plt.colorbar(label='$u_1(x,y)$')
     plt.tight_layout()
     plt.xlabel('$x$')
     plt.ylabel('$y$')
@@ -85,7 +85,7 @@ if u.shape[1]>nNbr:
     
     plt.figure(figsize=(5.5,4))
     plt.scatter(nXY[:,0],nXY[:,1],c=u2,cmap=cmap,marker=mk)
-    plt.colorbar(label='$u\,_2\,(x,y)$')
+    plt.colorbar(label='$u_2(x,y)$')
     plt.tight_layout()
     plt.xlabel('$x$')
     plt.ylabel('$y$')

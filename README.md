@@ -4,7 +4,7 @@ Finite element code developped for **Academic Purpose** (and thus not optimized)
 
 ## Use
 
-First, make sure that the Eigen library is installed and that your GCC supports OpenMP. Then move to one of the code folders and compile the project by providing the path to Eigen to the compiler. Some scripts such as transport.cpp or mechanics.cpp are provided as example.
+First, make sure that the Eigen library is installed and that your GCC supports OpenMP. Then move to one of the code folders and compile the project by providing the path of Eigen to the compiler. Some examples such as transport.cpp or mechanics.cpp are provided, you may run compile.bat to build all the examples.
 ```css
 g++ -O2 -fopenmp -I path-to-Eigen\Eigen example.cpp mesh.cpp -o example.exe
 ```
