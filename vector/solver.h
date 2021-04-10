@@ -10,7 +10,6 @@ typedef SparseMatrix<double> SM;
 
 struct Data{
 
-    int step;
     double E;
     double v;
     vector<int> nIdx;
@@ -52,23 +51,20 @@ VectorXd solve(Mesh &mesh,Data data){
 
     VectorXd u(2*mesh.nNbr);
     SparseLU<SM> solver;
-    u.setZero();
 
-       for(int i=0; i<data.step+1; i++){
 
-        vector<Face> face = mesh.setFace(data.fId);
-        VectorXd dB = mesh.neumannBC(face,dBC);
-        dB = mesh.dirichletBC2(dB,nIdx,data.bcDirX,0);
-        dB = mesh.dirichletBC2(dB,nIdy,data.bcDirY,1);
+    vector<Face> face = mesh.setFace(data.fId);
+    VectorXd dB = mesh.neumannBC(face,dBC);
+    dB = mesh.dirichletBC2(dB,nIdx,data.bcDirX,0);
+    dB = mesh.dirichletBC2(dB,nIdy,data.bcDirY,1);
 
-        SM K = mesh.matrix2D(D);
-        K = mesh.dirichletBC1(K,nIdx,0);
-        K = mesh.dirichletBC1(K,nIdy,1);
+    SM K = mesh.matrix2D(D);
+    K = mesh.dirichletBC1(K,nIdx,0);
+    K = mesh.dirichletBC1(K,nIdy,1);
 
-        solver.compute(K);
-        VectorXd du = solver.solve(dB);
-        mesh.update(du);
-        u += du;
-    }
+    solver.compute(K);
+    VectorXd u = solver.solve(dB);
+    mesh.update(u);
+
     return u;
 }
