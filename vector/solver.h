@@ -41,20 +41,11 @@ VectorXd solve(Mesh &mesh,Data data){
     vector<int> nIdy = data.nIdy;
     Matrix3d D = stiffness(data.E,data.v);
 
-    // BC and sparse solver
-    
-    vector<Vector2d> bcNeu = data.bcNeu;
-    vector<Vector2d> dBC(bcNeu.size());
-    for(int i=0; i<bcNeu.size(); i++){dBC[i] = bcNeu[i]/data.step;}
+    // Finite strain theory solver
 
-    // Updated Lagrangian solver
-
-    VectorXd u(2*mesh.nNbr);
     SparseLU<SM> solver;
-
-
     vector<Face> face = mesh.setFace(data.fId);
-    VectorXd dB = mesh.neumannBC(face,dBC);
+    VectorXd dB = mesh.neumannBC(face,data.bcNeu);
     dB = mesh.dirichletBC2(dB,nIdx,data.bcDirX,0);
     dB = mesh.dirichletBC2(dB,nIdy,data.bcDirY,1);
 

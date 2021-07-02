@@ -58,7 +58,7 @@ Param meshParam(int type,int size,double xyMax){
     return param;
 }
 
-// Solves linear elsato-plasticity ∇·σ(u) = 0
+// Solves linear elasticity ∇·σ(u) = 0
 
 int main(){
 
@@ -73,7 +73,6 @@ int main(){
     Data data;
     data.E = 2;
     data.v = 0.3;
-    data.step = 100;
     data.bcNeu = bcNeu;
     data.fId = param.fId;
     data.nIdx = param.nId;

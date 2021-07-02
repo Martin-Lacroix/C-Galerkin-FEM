@@ -4,8 +4,9 @@ import numpy as np
 
 # %% Read File
 
-u = np.genfromtxt("output/solution.txt",delimiter=',')
-nXY = np.genfromtxt("output/nXY.txt",delimiter=',')
+path = r"build/output/"
+u = np.genfromtxt(path+"solution.txt",delimiter=',')
+nXY = np.genfromtxt(path+"nXY.txt",delimiter=',')
 
 # Parameters
 
@@ -56,7 +57,7 @@ if u.shape[1]==nNbr:
         ax.set_zlim(z1,z2)
         plt.tight_layout()
         
-        plt.savefig("output/"+str(k)+".png",bbox_inches="tight")
+        plt.savefig(path+str(k)+".png",bbox_inches="tight")
         plt.show()
         plt.close()
     k += 1
@@ -77,7 +78,7 @@ if u.shape[1]>nNbr:
     plt.xlabel('$x$')
     plt.ylabel('$y$')
     
-    plt.savefig("output/0.png",bbox_inches="tight")
+    plt.savefig(path+"0.png",bbox_inches="tight")
     plt.show()
     plt.close()
     
@@ -90,6 +91,6 @@ if u.shape[1]>nNbr:
     plt.xlabel('$x$')
     plt.ylabel('$y$')
     
-    plt.savefig("output/1.png",bbox_inches="tight")
+    plt.savefig(path+"1.png",bbox_inches="tight")
     plt.show()
     plt.close()
