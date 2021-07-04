@@ -18,4 +18,4 @@ g++ -O3 -fopenmp -I %path-eigen% %mechanics-cpp% -o build\mechanics.exe
 g++ -O3 -fopenmp -I %path-eigen% %advection-cpp% -o build\advection.exe
 g++ -O3 -fopenmp -I %path-eigen% %transport-cpp% -o build\transport.exe
 g++ -O3 -fopenmp -I %path-eigen% %diffusion-cpp% -o build\diffusion.exe
-g++ -O3 -fopenmp -I %path-eigen% %laplace-cpp% -o build\advection.exe
+g++ -O3 -fopenmp -I %path-eigen% %laplace-cpp% -o build\laplace.exe
