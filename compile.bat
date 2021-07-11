@@ -2,7 +2,7 @@ mkdir build
 
 :: External library paths
 
-set path-eigen=C:\Computing\msys64\mingw64\include\eigen3
+set path-eigen=C:\Local\msys64\mingw64\include\eigen3
 
 :: Main code paths
 
